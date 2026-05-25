@@ -783,7 +783,7 @@ img{
 <button class="button" onclick="setTheme('green')" data-imt-p="1" data-imt-translation-only="1">💚 Green</button>
 <button class="button" onclick="setTheme('blue')" data-imt-p="1" data-imt-translation-only="1">💙 Blue</button>
 <button class="button" onclick="setTheme('purple')" data-imt-p="1" data-imt-translation-only="1">💜 Purple</button>
-<button class="button" onclick="setTheme('pink')" data-imt-p="1" data-imt-translation-only="1">🩷 Rose</button>
+<button class="button" onclick="setTheme('pink')" data-imt-p="1" data-imt-translation-only="1">🩷 Pink</button>
 <button class="button" onclick="setTheme('red')" data-imt-p="1" data-imt-translation-only="1">❤️ Red</button>
 
 <div class="chat-list" id="chatList"></div>
@@ -866,7 +866,7 @@ if(imageDB[key]){
 add("GreenAI","Aqui está:");
 add("GreenAI",`<img src="${imageDB[key]}">`);
 }else{
-add("GreenAI","não achei 😅");
+add("GreenAI","error 😅");
 }
 
 return;
@@ -891,7 +891,7 @@ function responder(text){
 
 text = text.toLowerCase();
 
-let resposta = "deu erro em mim, desculpa 😅";
+let resposta = "It gave me an error, sorry😅";
 
 /* OI */
 if(text.includes("hi") || text.includes("hello") || text.includes("hey") || text.includes("how are you")){
@@ -904,35 +904,30 @@ resposta = "To display an image, simply type 'image:' followed by the desired th
 }
 
 /* JOGAR BLACK BOX */
-if(text.includes("jogar black box")||text.includes("jogar blackbox")||text.includes("jogue black box")||text.includes("jogue blackbox")){
+if(text.includes("play black box")||text.includes("play blackbox")||text.includes("play black box")||text.includes("jogue blackbox")){
 resposta =
-"eu tenho o black box 1.1.0 e vou joga-lo....<br><br>" +
-"Uhm... esse jogo é definitivamente algo... Primeiramente, os cardápios desse jogo são... Não sei como descrever esses cardápios rs, eles são simplesmente terríveis. Além disso, no menu principal, tem uma música, mas a música está cantando 'Eu sou uma IA, nasci do digital...', tipo, você se importaria de me dar um pouco de contexto sobre quem é essa IA? E o que isso tem a ver com o jogo? E o único mapa que funciona é o 'Bee Tycoon', o outro só gera um erro no log de desenvolvimento. No Bee Tycoon, há um material animado de forma estranha, e depois de um tempo, não só pisei em algo, o que me fez girar o beyblade para sempre, como também percebi que estava travado (zombar do meu teclado me levou até um painel com um menu 'voltar', mas não consigo clicar, meu cursor está travado). O jogador é dolorosamente lento, e aparentemente, eu também sou bem grande. Fui me aproximando lentamente de uma montanha, fora do amarelo sim, eu apareci, e depois de um tempo, cheguei à montanha, mas acabei girando bastante e perdi o controle de mim mesmo. Isso foi meio assustador, pra ser sincero.";
+"I have the black box 1.1.0 and I am going to play it....<br><br>" +
+"Uh... this game is definitely something... First of all, the menus of this game are... I don't know how to describe these menus lol, they are simply terrible. Also, in the main menu, there is music, but the music is singing 'I am an AI, I was born from digital...', like, would you mind giving me a little context about who this AI is? And what does this have to do with the game? And the only map that works is 'Bee Tycoon', the other one just generates a development log error. In Bee Tycoon, there is an animated material in a strange way, and after a while, not only did stepping on something make me spin the beyblade forever, but I also noticed that it was stuck (laughing at my keyboard led me to a panel with a 'back' menu, but I can't click it, my cursor is stuck). The player is painfully slow, and apparently, I am also quite big. I was slowly approaching a mountain, outside of the yellow, I appeared, and after a while, I reached the mountain, but I ended up spinning quite a bit and lost control of myself. That was kind of scary, honestly..";
 }
 
 /* JOGAR ATUM CLICKER */
-if(text.includes("jogar atum clicker")||text.includes("jogue atum clicker")){
+if(text.includes("play atum clicker")||text.includes("play atum clicker")){
 resposta =
-"eu tenho o atum clicker de todas as versões e vou joga-lo....<br><br>" +
-"Não entendo por que o download se chama 'Atum Clicker Mobile' (ATUM?), já que baixando ele me dá um WebGL em vez disso. Além disso, abrir builds do webgl é meio chato, então se quiser arquivos para download, faça uma build para download. E esse jogo deveria ter um webgl em Itch? Porque tem um pop-up dizendo que o desenvolvedor ainda não enviou nenhum jogo.... Desculpe, mas esse jogo ainda é bem chato. Decidi passar para o modo difícil, e uma coisa que notei primeiro foi que os preços não funcionam. Na teoria, preciso de 2 mil dinheiro para chegar ao segundo mundo, mas acabei precisando de cerca de 5 mil para desbloqueá-lo." +
-
-"Aparentemente, o jogo não salva o progresso, o que é terrível é que passei mais de meio miléssimo de segundo só para chegar ao terceiro mundo (design terrível de peixes, aliás). Não estou aprendendo o jogo inteiro em uma sessão só, isso é muito chato (e dói, meus comandos doem rs)"+
-
-"Fora isso. Arte ruim, coisas que não combinam, etc";
+"I have the Tunaclicker of all versions and I'm going to play it....I don't understand why the download is called 'Tuna Clicker Mobile' (TUNA?), since after downloading it gives me a WebGL instead. Besides, opening WebGL builds is kind of annoying, so if you want download files, make a download build. And that game should have a WebGL on Itch? Because there's a pop-up saying the developer hasn't uploaded any game yet.... Sorry, but that game is still very boring. I decided to go to hard mode, and the first thing I noticed was that the prices don't work. In theory, I need 2,000 money to get to the second world, but I ended up needing about 5,000 to unlock it.Apparently, the game doesn't save progress, which is terrible is that I spent more than half a millisecond just to get to the third world (terrible fish design, by the way). I'm not learning the whole game in one session, that's very boring (and hurts, my commands hurt rs)Besides. Bad art, things that don't match, etc.";
 }
 
 /* SITE */
 else if(text.includes("como") && text.includes("criar") && text.includes("site")){
 resposta =
-"Pra criar um site você normalmente usa HTML, CSS e JavaScript😉" +
+"To create a website you usually use HTML, CSS, and JavaScript 😉" +
 
-"HTML cria a estrutura do site, CSS deixa bonito e JavaScript adiciona funções e animações 😍" +
+"HTML creates the site's structure, CSS makes it pretty, and JavaScript adds functions and animations 😍" +
 
-"Exemplo:" +
+"Example:" +
 
-"HTML = esqueleto, coisas que tem no site;" +
-"CSS = aparência, tipo, a roupa que você está usando!;" +
-"JavaScript = cérebro, o que manda como vai ser o comportamento do site!" +
+"HTML = skeleton, things that are on the site;" +
+"CSS = appearance, type, the clothes you are wearing!" +
+"JavaScript = brain, what commands how the site will behave!" +
 
 "Se quiser eu posso até te ensinar passo a passo 😊" +
 
