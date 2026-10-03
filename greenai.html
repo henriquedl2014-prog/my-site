@@ -109,6 +109,8 @@
         .sitePreviewOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 50000; display: none; flex-direction: column; padding: 20px; backdrop-filter: blur(8px); }
         .sitePreviewHeader { display: flex; justify-content: space-between; background: #111827; padding: 12px 20px; border-radius: 12px 12px 0 0; color: white; }
         .sitePreviewFrame { flex: 1; width: 100%; border: 1px solid #374151; background: white; border-radius: 0 0 12px 12px; }
+        .codeEditorOverlay { position:fixed; inset:0; z-index:60000; display:none; flex-direction:column; gap:12px; padding:24px; background:#050914f2; }
+        .codeEditorOverlay textarea { flex:1; resize:none; padding:16px; border:1px solid #34d399; border-radius:12px; background:#08111d; color:#d1fae5; font:14px/1.5 Consolas,monospace; }
 
         .voicePanel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(5, 20, 15, 0.98); border: 2px solid var(--accent); padding: 25px; border-radius: 24px; display: none; flex-direction: column; align-items: center; gap: 15px; width: min(92vw, 500px); max-height: 80vh; overflow-y: auto; z-index: 999; }
         .orb { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--bg3), var(--accent)); box-shadow: 0 0 15px rgba(58, 238, 172, 0.3); }
@@ -185,7 +187,7 @@
                     <button class="mode-opt-btn" onclick="selectAiMode('natural_4.9', this)">Natural AI para GreenAI 4.9</button>
                     <button class="mode-opt-btn" onclick="selectAiMode('estudos_aprofundados', this)">Modo de Estudos Aprofundados</button>
                     <button class="mode-opt-btn" onclick="selectAiMode('imagens', this)">Imagens & Vídeos 1.2</button>
-                    <button class="mode-opt-btn" onclick="selectAiMode('canvas', this)">Canva for Programmers</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('canvas', this)">Sites & Games 2.0</button>
                 </div>
             </div>
 
@@ -212,12 +214,21 @@
     <div class="sitePreviewOverlay" id="sitePreviewOverlay">
         <div class="sitePreviewHeader">
             <span id="sitePreviewTitle" style="font-weight:bold;">🌐 GreenAI Site Engine</span>
-            <div style="display:flex; gap:10px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="button small" onclick="editarProjetoAtual()">✏️ Editar detalhes</button>
+                <button class="button small" onclick="baixarProjetoAtual()">⬇️ Baixar</button>
+                <button class="button small" onclick="publicarProjetoAtual(this)">🌍 Publicar</button>
                 <button class="button small" style="background:#34d399; color:black;" onclick="abrirSiteEmNovaAba()">🚀 Abrir em Nova Aba</button>
                 <button class="button small" style="background:#ef4444; color:white;" onclick="fecharPreviewSite()">❌ Fechar</button>
             </div>
         </div>
         <iframe class="sitePreviewFrame" id="sitePreviewFrame"></iframe>
+    </div>
+
+    <div class="codeEditorOverlay" id="codeEditorOverlay">
+        <div style="display:flex;align-items:center;justify-content:space-between;color:white;"><b>Editar código e detalhes</b><span>HTML, CSS e JavaScript</span></div>
+        <textarea id="projectCodeEditor" spellcheck="false"></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;"><button class="button" onclick="fecharEditorProjeto()">Cancelar</button><button class="button" style="background:#34d399;color:#052e16" onclick="salvarEdicaoProjeto()">Salvar alterações</button></div>
     </div>
 
     <div class="voicePanel" id="voicePanel">
@@ -250,6 +261,7 @@
         let currentChat = localStorage.getItem("greenai_chat") || "Principal";
         const CHAVES_RESERVADAS = ["greenai_chat", "greenai_voice_name", "greenai_voice_uri", "greenai_theme", "greenai_estilo"];
         let ultimoHtmlGerado = "";
+        let projetoAtualId = "";
 
 // LISTA DE VÍDEOS COM YOUTUBE-NOCOOKIE (31 VÍDEOS)
         const LISTA_VIDEOS = [
@@ -287,9 +299,39 @@
         ];
 
         // ================= REDCINE =================
+        function montarUrlVideo(url) {
+            const separador = url.includes('?') ? '&' : '?';
+            return `${url}${separador}autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+        }
+
+        function obterUrlExterna(embedUrl) {
+            const match = embedUrl.match(/\/embed\/([^?&]+)/);
+            return match ? `https://www.youtube.com/watch?v=${match[1]}` : embedUrl;
+        }
+
+        function reproduzirRedCine(video) {
+            const playerSection = document.getElementById("activePlayerSection");
+            const src = montarUrlVideo(video.url);
+            const externa = obterUrlExterna(video.url);
+            playerSection.innerHTML = `
+                <iframe id="tubePlayer"
+                    src="${src}"
+                    title="${video.titulo.replace(/"/g, '&quot;')}"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen></iframe>
+                <a href="${externa}" target="_blank" rel="noopener noreferrer"
+                   style="position:absolute; right:10px; bottom:10px; z-index:5; background:#e50914; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                   Abrir no YouTube
+                </a>`;
+            playerSection.style.display = "block";
+            playerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
         function closeRedCineWithExplosion() {
             const playerSection = document.getElementById("activePlayerSection");
-            playerSection.innerHTML = ""; // Limpa o iframe para parar o vídeo
+            playerSection.innerHTML = "";
             playerSection.style.display = "none";
             document.getElementById("tubeOverlay").style.display = "none";
         }
@@ -303,11 +345,7 @@
             LISTA_VIDEOS.forEach(v => {
                 let div = document.createElement("div");
                 div.style = "background:#111; border:1px solid var(--cinema-red); padding:10px; border-radius:8px; cursor:pointer;";
-                div.onclick = () => {
-                    // Cria o iframe com todos os atributos solicitados
-                    playerSection.innerHTML = `<iframe id="tubePlayer" width="100%" height="100%" src="${v.url}&autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="position:absolute; top:0; left:0; border:none;"></iframe>`;
-                    playerSection.style.display = "block";
-                };
+                div.onclick = () => reproduzirRedCine(v);
                 div.innerHTML = `<div style="font-size:24px; text-align:center; margin-bottom:5px;">🎬</div><div style="font-size:12px; font-weight:bold; color:#fff;">${v.titulo}</div>`;
                 grid.appendChild(div);
             });
@@ -356,38 +394,62 @@
             const code = window.sitesGeradosMemoria[idSite];
             if(code) {
                 ultimoHtmlGerado = code;
+                projetoAtualId = idSite;
                 document.getElementById("sitePreviewTitle").textContent = `🌐 ${titulo}`;
                 document.getElementById("sitePreviewOverlay").style.display = "flex";
                 const doc = document.getElementById("sitePreviewFrame").contentDocument;
                 doc.open(); doc.write(code); doc.close();
             } else { alert("Site não encontrado na memória desta sessão."); }
         }
+
+        async function copiarCodigoGerado(idSite, botao) {
+            const codigo = window.sitesGeradosMemoria[idSite];
+            if (!codigo) return alert("Código não encontrado nesta sessão.");
+            try {
+                await navigator.clipboard.writeText(codigo);
+            } catch (_) {
+                const area = document.createElement('textarea');
+                area.value = codigo; document.body.appendChild(area); area.select();
+                document.execCommand('copy'); area.remove();
+            }
+            const anterior = botao.textContent;
+            botao.textContent = 'Código copiado!';
+            setTimeout(() => botao.textContent = anterior, 1800);
+        }
         function fecharPreviewSite() { document.getElementById("sitePreviewOverlay").style.display = "none"; }
         function abrirSiteEmNovaAba() {
             const blob = new Blob([ultimoHtmlGerado], { type: 'text/html' });
             window.open(URL.createObjectURL(blob), '_blank');
         }
-
-        // ================= REDCINE =================
-        function closeRedCineWithExplosion() {
-            document.getElementById("tubePlayer").src = "";
-            document.getElementById("tubeOverlay").style.display = "none";
+        function editarProjetoAtual() {
+            if (!ultimoHtmlGerado) return;
+            document.getElementById('projectCodeEditor').value = ultimoHtmlGerado;
+            document.getElementById('codeEditorOverlay').style.display = 'flex';
         }
-
-        function triggerRedCine() { 
-            document.getElementById("tubeOverlay").style.display = "flex";
-            const grid = document.getElementById("videoGrid");
-            grid.innerHTML = "";
-            LISTA_VIDEOS.forEach(v => {
-                let div = document.createElement("div");
-                div.style = "background:#111; border:1px solid var(--cinema-red); padding:10px; border-radius:8px; cursor:pointer;";
-                div.onclick = () => {
-                    document.getElementById("tubePlayer").src = v.url + "?autoplay=1";
-                    document.getElementById("activePlayerSection").style.display = "block";
-                };
-                div.innerHTML = `<div style="font-size:24px; text-align:center; margin-bottom:5px;">🎬</div><div style="font-size:12px; font-weight:bold; color:#fff;">${v.titulo}</div>`;
-                grid.appendChild(div);
-            });
+        function fecharEditorProjeto() { document.getElementById('codeEditorOverlay').style.display = 'none'; }
+        function salvarEdicaoProjeto() {
+            const codigo = document.getElementById('projectCodeEditor').value;
+            if (!codigo.trim()) return alert('O código não pode ficar vazio.');
+            ultimoHtmlGerado = codigo;
+            if (projetoAtualId) window.sitesGeradosMemoria[projetoAtualId] = codigo;
+            const doc = document.getElementById('sitePreviewFrame').contentDocument;
+            doc.open(); doc.write(codigo); doc.close();
+            fecharEditorProjeto();
+        }
+        function baixarProjetoAtual() {
+            if (!ultimoHtmlGerado) return;
+            const titulo = document.getElementById('sitePreviewTitle').textContent.replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'') || 'greenai_project';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([ultimoHtmlGerado], {type:'text/html'}));
+            a.download = titulo + '.html'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+        async function publicarProjetoAtual(botao) {
+            if (!ultimoHtmlGerado) return;
+            const url = URL.createObjectURL(new Blob([ultimoHtmlGerado], {type:'text/html'}));
+            window.open(url, '_blank');
+            try { await navigator.clipboard.writeText(url); botao.textContent = 'Link da sessão copiado!'; }
+            catch (_) { botao.textContent = 'Publicado nesta sessão!'; }
+            setTimeout(() => botao.textContent = '🌍 Publicar', 2200);
         }
 
         // ================= BACKUP & TEMA =================
@@ -433,6 +495,16 @@
             for (let c in cores) if(t.includes(c)) { corPri = cores[c][0]; bgColor = cores[c][1]; break; }
             let assunto = texto.replace(/(crie|um|site|faça|que|ele|mostre|vários|varios|quero)/gi, '').trim() || texto;
             return { corPri, bgColor, assunto: assunto.charAt(0).toUpperCase() + assunto.slice(1) };
+        }
+
+        function detectarPedidoJogo(texto) {
+            const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const termos = [
+                'jogo','jogos','game','games','minigame','minigames','fps','shooter','arcade','clicker',
+                'tiro','atirar','arma','inimigo','aventura','acao','luta','arena','sobrevivencia',
+                'corrida','carro','racing','plataforma','pular','puzzle','quebra-cabeca','rpg','simulador'
+            ];
+            return termos.some(termo => t.includes(termo));
         }
 
         function inferirEmoji(a) {
@@ -529,6 +601,74 @@ function nav(id, button) {
 </html>`;
         }
 
+        function gerarSiteProfissional(templateId, specs, pedido) {
+            const assunto = specs.assunto || 'Novo projeto';
+            const tipo = /loja|produto|venda|e-commerce/i.test(pedido) ? 'Loja' : /restaurante|comida|receita/i.test(pedido) ? 'Restaurante' : /portf[oó]lio|curr[ií]culo/i.test(pedido) ? 'Portfólio' : /blog|not[ií]cia/i.test(pedido) ? 'Blog' : 'Experiência';
+            const emoji = inferirEmoji(assunto);
+            const itens = Array.from({length: 9}, (_,i) => `<article class="card"><span>${emoji}</span><h3>${tipo} ${i+1}</h3><p>Uma opção criada especialmente para ${assunto}, com conteúdo claro e moderno.</p><button onclick="alert('Você selecionou a opção ${i+1}!')">Ver detalhes</button></article>`).join('');
+            return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${assunto}</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#080d1a;color:#eaf2ff}nav{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:20px;padding:16px 7%;background:#0b1020ee;backdrop-filter:blur(14px);border-bottom:1px solid #ffffff18}nav b{font-size:22px;color:${specs.corPri}}nav a{color:#dce7ff;text-decoration:none}.links{display:flex;gap:18px;margin-left:auto}.menu{display:none;margin-left:auto}.hero{min-height:58vh;display:grid;place-items:center;text-align:center;padding:80px 8%;background:radial-gradient(circle at 50% 20%,${specs.corPri}66,transparent 55%),linear-gradient(135deg,#101a35,#090d18)}h1{font-size:clamp(40px,8vw,86px);margin:0}.hero p{max-width:720px;font-size:20px;color:#c4cdea}.cta,.card button,form button{border:0;border-radius:12px;padding:13px 20px;background:${specs.corPri};color:white;font-weight:bold;cursor:pointer}.section{padding:70px 7%;max-width:1250px;margin:auto}.tools input{width:min(460px,100%);padding:14px;margin:25px 0;border-radius:12px;border:1px solid #ffffff30;background:#ffffff10;color:inherit}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}.card{padding:25px;border-radius:22px;background:#0b1020cc;border:1px solid #ffffff18;box-shadow:0 14px 35px #0005;transition:.25s}.card:hover{transform:translateY(-7px);border-color:${specs.corPri}}.card span{font-size:42px}.card button{margin-top:12px}form{display:grid;gap:12px;max-width:650px}form input,form textarea{padding:14px;border-radius:12px;border:1px solid #ffffff30;background:#ffffff0d;color:inherit}footer{text-align:center;padding:30px;background:#070a12;color:#8e9ab5}@media(max-width:700px){.menu{display:block}.links{display:none;position:absolute;top:65px;left:0;right:0;padding:20px;background:#0b1020;flex-direction:column}.links.open{display:flex}}
+</style></head><body><nav><b>${emoji} ${assunto}</b><button class="menu" onclick="document.querySelector('.links').classList.toggle('open')">☰</button><div class="links"><a href="#inicio">Início</a><a href="#destaques">Destaques</a><a href="#contato">Contato</a></div></nav><header id="inicio" class="hero"><div><small>${tipo.toUpperCase()} • DESIGN ${templateId+1}</small><h1>${assunto}</h1><p>Um site rápido, responsivo e pronto para apresentar seu projeto em qualquer tela.</p><button class="cta" onclick="document.querySelector('#destaques').scrollIntoView({behavior:'smooth'})">Explorar agora</button></div></header><main><section id="destaques" class="section"><h2>Descubra os destaques</h2><div class="tools"><input id="busca" placeholder="Pesquisar..." oninput="filtrar()"></div><div class="grid">${itens}</div></section><section id="contato" class="section"><h2>Fale conosco</h2><form onsubmit="enviar(event)"><input required placeholder="Seu nome"><input required type="email" placeholder="Seu e-mail"><textarea required rows="5" placeholder="Sua mensagem"></textarea><button>Enviar mensagem</button><output id="retorno"></output></form></section></main><footer>© ${new Date().getFullYear()} ${assunto}. Criado com GreenAI.</footer><script>function filtrar(){let q=document.querySelector('#busca').value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.hidden=!c.innerText.toLowerCase().includes(q))}function enviar(e){e.preventDefault();document.querySelector('#retorno').textContent='Mensagem enviada com sucesso!';e.target.reset()}<\/script></body></html>`;
+        }
+
+        function gerarJogoHTML(specs) {
+            const titulo = specs.assunto || 'GreenAI Arcade';
+            return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#050814;color:white;font-family:Arial}canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at top,#172554,#020617)}#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;font-weight:bold;pointer-events:none}#help{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);opacity:.7}.pad{display:none;position:fixed;bottom:20px;left:18px;grid-template-columns:55px 55px 55px;gap:5px}.pad button,#fire{border:1px solid #fff5;background:#ffffff20;color:#fff;border-radius:15px;font-size:23px;width:55px;height:55px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#fire{display:none;position:fixed;right:25px;bottom:40px;width:75px;height:75px;border-radius:50%;background:${specs.corPri}99}#over{display:none;position:fixed;inset:0;background:#020617dd;place-items:center;text-align:center}#over button{padding:14px 25px;border:0;border-radius:12px;background:${specs.corPri};color:white}@media(pointer:coarse){.pad{display:grid}#fire{display:block}#help{display:none}}</style></head><body><canvas id="game"></canvas><div id="hud"><b>${titulo}</b><span>Score: <b id="score">0</b> • Lives: <b id="lives">3</b> • Level: <b id="level">1</b></span></div><div id="help">WASD/Arrows: move • Space: shoot</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="fire">●</button><div id="over"><div><h1>Game Over</h1><p id="final"></p><button onclick="restart()">Play Again</button></div></div><script>
+const c=document.querySelector('#game'),x=c.getContext('2d'),keys={},enemies=[],shots=[];let p,score,lives,level,last,spawn,running;const scoreEl=document.querySelector('#score'),livesEl=document.querySelector('#lives'),levelEl=document.querySelector('#level'),fire=document.querySelector('#fire'),over=document.querySelector('#over'),final=document.querySelector('#final');function size(){c.width=innerWidth;c.height=innerHeight}onresize=size;size();onkeydown=e=>{keys[e.key]=1;if(e.code==='Space')shoot()};onkeyup=e=>keys[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>keys[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>keys[b.dataset.k]=0});fire.onpointerdown=shoot;function restart(){p={x:innerWidth/2,y:innerHeight-90,r:18,c:'${specs.corPri}',cool:0};score=0;lives=3;level=1;spawn=0;enemies.length=shots.length=0;running=true;over.style.display='none';last=performance.now();requestAnimationFrame(loop);ui()}function shoot(){if(!running||p.cool>0)return;shots.push({x:p.x,y:p.y-20,v:620});p.cool=.22}function ui(){scoreEl.textContent=score;livesEl.textContent=lives;levelEl.textContent=level}function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}function loop(t){if(!running)return;let d=Math.min((t-last)/1000,.033);last=t;level=1+Math.floor(score/150);p.cool=Math.max(0,p.cool-d);let v=280;if(keys.ArrowLeft||keys.a)p.x-=v*d;if(keys.ArrowRight||keys.d)p.x+=v*d;if(keys.ArrowUp||keys.w)p.y-=v*d;if(keys.ArrowDown||keys.s)p.y+=v*d;p.x=Math.max(18,Math.min(innerWidth-18,p.x));p.y=Math.max(18,Math.min(innerHeight-18,p.y));spawn-=d;if(spawn<=0){enemies.push({x:25+Math.random()*(innerWidth-50),y:-25,r:18,v:90+level*18});spawn=Math.max(.25,1-level*.055)}shots.forEach(s=>s.y-=s.v*d);enemies.forEach(e=>e.y+=e.v*d);for(let i=enemies.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--)if(hit(enemies[i],{...shots[j],r:5})){enemies.splice(i,1);shots.splice(j,1);score+=10;break}if(enemies[i]&&enemies[i].y>innerHeight){enemies.splice(i,1);lives--;if(lives<=0){running=false;final.textContent='Score: '+score;over.style.display='grid'}}}x.clearRect(0,0,innerWidth,innerHeight);x.fillStyle=p.c;x.beginPath();x.moveTo(p.x,p.y-24);x.lineTo(p.x-18,p.y+20);x.lineTo(p.x+18,p.y+20);x.fill();x.fillStyle='#fde047';shots.forEach(s=>x.fillRect(s.x-3,s.y-10,6,16));x.fillStyle='#ef4444';enemies.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});ui();requestAnimationFrame(loop)}restart();<\/script></body></html>`;
+        }
+
+        function gerarJogoVariado(specs, pedido) {
+            const grupos = {
+                tiro: [
+                    {nome:'Star Defender',icone:'▲',fundo:'#020617',cor:'#22d3ee',vel:105,objetivo:'Shoot the enemy fleet!'},
+                    {nome:'Neon Blaster',icone:'◆',fundo:'#16051f',cor:'#f0abfc',vel:125,objetivo:'Destroy the neon drones!'},
+                    {nome:'Tank Assault',icone:'▣',fundo:'#17210d',cor:'#a3e635',vel:82,objetivo:'Defend the battlefield!'}
+                ],
+                aventura: [
+                    {nome:'Crystal Quest',icone:'◇',fundo:'#082f49',cor:'#67e8f9',vel:78,objetivo:'Collect crystals and avoid guardians!'},
+                    {nome:'Jungle Explorer',icone:'●',fundo:'#052e16',cor:'#4ade80',vel:88,objetivo:'Find ancient treasures!'},
+                    {nome:'Moon Journey',icone:'☾',fundo:'#1e1b4b',cor:'#c4b5fd',vel:68,objetivo:'Recover the lost moon fragments!'}
+                ],
+                acao: [
+                    {nome:'Cyber Rush',icone:'⬢',fundo:'#111827',cor:'#fb7185',vel:145,objetivo:'Survive the cyber rush!'},
+                    {nome:'Lava Escape',icone:'▲',fundo:'#450a0a',cor:'#fbbf24',vel:155,objetivo:'Escape the falling fire!'},
+                    {nome:'Shadow Arena',icone:'✦',fundo:'#09090b',cor:'#a78bfa',vel:135,objetivo:'Defeat the shadow swarm!'}
+                ],
+                corrida: [
+                    {nome:'Neon Highway',icone:'▰',fundo:'#172554',cor:'#38bdf8',vel:165,objetivo:'Dodge traffic and reach maximum speed!'},
+                    {nome:'Desert Rally',icone:'◆',fundo:'#451a03',cor:'#fb923c',vel:148,objetivo:'Race through the desert storm!'},
+                    {nome:'Galaxy Racer',icone:'▲',fundo:'#1e1b4b',cor:'#e879f9',vel:178,objetivo:'Win the race between the stars!'}
+                ],
+                plataforma: [
+                    {nome:'Sky Islands',icone:'☁',fundo:'#0c4a6e',cor:'#7dd3fc',vel:92,objetivo:'Climb through the floating islands!'},
+                    {nome:'Cave Jumper',icone:'⬟',fundo:'#292524',cor:'#f59e0b',vel:105,objetivo:'Escape the crystal cave!'},
+                    {nome:'Candy Kingdom',icone:'●',fundo:'#500724',cor:'#f9a8d4',vel:85,objetivo:'Collect candy across the kingdom!'}
+                ],
+                puzzle: [
+                    {nome:'Color Reactor',icone:'◈',fundo:'#042f2e',cor:'#2dd4bf',vel:72,objetivo:'Collect matching energy colors!'},
+                    {nome:'Number Lab',icone:'#',fundo:'#172554',cor:'#facc15',vel:76,objetivo:'Solve the falling number challenge!'},
+                    {nome:'Memory Gates',icone:'▦',fundo:'#2e1065',cor:'#c084fc',vel:68,objetivo:'Remember the safe symbols!'}
+                ]
+            };
+            const texto = pedido.toLowerCase();
+            const categoria = /corrida|carro|racing|race/.test(texto) ? 'corrida' : /plataforma|platform|pular|jump/.test(texto) ? 'plataforma' : /puzzle|quebra.?cabe[cç]a|mem[oó]ria/.test(texto) ? 'puzzle' : /aventura|explor|quest|tesouro/.test(texto) ? 'aventura' : /a[cç][aã]o|luta|arena|sobreviv/.test(texto) ? 'acao' : 'tiro';
+            const numeroPedido = Math.max(0, Math.min(2, (parseInt((texto.match(/\b[123]\b/)||[])[0])||1)-1));
+            const g = grupos[categoria][numeroPedido];
+            if (categoria === 'aventura') return gerarAventuraMundoAberto(specs, g, numeroPedido);
+            const aventura = categoria === 'aventura';
+            const acao = categoria === 'acao';
+            const titulo = `${g.nome} — ${specs.assunto || 'GreenAI Game'}`;
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:${g.fundo};color:#fff;font-family:Arial}canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at top,${g.cor}33,${g.fundo} 68%)}#hud{position:fixed;inset:12px 14px auto;display:flex;justify-content:space-between;font-weight:800;text-shadow:0 2px 6px #000}#mission{position:fixed;top:45px;width:100%;text-align:center;color:${g.cor}}#help{position:fixed;bottom:12px;width:100%;text-align:center;opacity:.7}.pad{display:none;position:fixed;bottom:20px;left:18px;grid-template-columns:54px 54px 54px;gap:5px}.pad button,#power{border:1px solid #fff5;background:#ffffff22;color:#fff;border-radius:14px;width:54px;height:54px;font-size:22px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#power{display:none;position:fixed;right:24px;bottom:38px;width:76px;height:76px;border-radius:50%;background:${g.cor}99}#over{display:none;position:fixed;inset:0;background:#000d;place-items:center;text-align:center}#over button{padding:14px 22px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#power{display:block}#help{display:none}}</style></head><body><canvas id="c"></canvas><div id="hud"><span>${g.icone} ${titulo}</span><span>Score <b id="s">0</b> • Lives <b id="l">3</b> • Level <b id="lv">1</b></span></div><div id="mission">${g.objetivo}</div><div id="help">WASD/Arrows to move • Space for power</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="power">${aventura?'⚡':'●'}</button><div id="over"><div><h1>Game Over</h1><p id="result"></p><button onclick="start()">Play Again</button></div></div><script>
+const c=document.querySelector('#c'),x=c.getContext('2d'),K={},foes=[],shots=[],gems=[];const S=document.querySelector('#s'),L=document.querySelector('#l'),LV=document.querySelector('#lv'),O=document.querySelector('#over'),R=document.querySelector('#result');let p,score,lives,level,last,timer,run;function resize(){c.width=innerWidth;c.height=innerHeight}onresize=resize;resize();onkeydown=e=>{K[e.key]=1;if(e.code==='Space')power()};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#power').onpointerdown=power;function start(){p={x:innerWidth/2,y:innerHeight-90,r:18,cool:0,shield:0};score=0;lives=3;level=1;last=performance.now();timer=0;run=true;foes.length=shots.length=gems.length=0;O.style.display='none';requestAnimationFrame(loop)}function power(){if(!run||p.cool>0)return;p.cool=${aventura?'1.5':acao?'.45':'.22'};${aventura?'p.shield=1.2;':acao?"for(let a=0;a<6;a++)shots.push({x:p.x,y:p.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520});":"shots.push({x:p.x,y:p.y-22,vx:0,vy:-650});"}}function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}function end(){run=false;R.textContent='Final score: '+score;O.style.display='grid'}function loop(t){if(!run)return;let d=Math.min(.033,(t-last)/1000);last=t;level=1+Math.floor(score/120);p.cool=Math.max(0,p.cool-d);p.shield=Math.max(0,p.shield-d);let mv=280;if(K.ArrowLeft||K.a)p.x-=mv*d;if(K.ArrowRight||K.d)p.x+=mv*d;if(K.ArrowUp||K.w)p.y-=mv*d;if(K.ArrowDown||K.s)p.y+=mv*d;p.x=Math.max(20,Math.min(innerWidth-20,p.x));p.y=Math.max(70,Math.min(innerHeight-20,p.y));timer-=d;if(timer<=0){let good=${aventura}&&Math.random()<.55;(good?gems:foes).push({x:25+Math.random()*(innerWidth-50),y:-25,r:good?12:18,v:${g.vel}+level*14});timer=Math.max(.22,.85-level*.04)}foes.forEach(e=>e.y+=e.v*d);gems.forEach(e=>e.y+=e.v*d);shots.forEach(q=>{q.x+=q.vx*d;q.y+=q.vy*d});for(let i=foes.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--)if(hit(foes[i],{...shots[j],r:5})){foes.splice(i,1);shots.splice(j,1);score+=10;break}if(foes[i]&&hit(foes[i],p)){foes.splice(i,1);if(!p.shield)lives--;if(lives<=0)end()}else if(foes[i]&&foes[i].y>innerHeight+30){foes.splice(i,1);${aventura?'':'lives--;if(lives<=0)end()'}}}for(let i=gems.length-1;i>=0;i--){if(hit(gems[i],p)){gems.splice(i,1);score+=20}else if(gems[i].y>innerHeight)gems.splice(i,1)}x.clearRect(0,0,c.width,c.height);x.fillStyle='${g.cor}';x.beginPath();x.arc(p.x,p.y,p.r+(p.shield?7:0),0,7);x.fill();x.fillStyle='#ef4444';foes.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});x.fillStyle='#fde047';gems.forEach(e=>{x.fillRect(e.x-10,e.y-10,20,20)});shots.forEach(q=>x.fillRect(q.x-3,q.y-7,6,14));S.textContent=score;L.textContent=lives;LV.textContent=level;requestAnimationFrame(loop)}start();<\/script></body></html>`;
+        }
+
+        function gerarAventuraMundoAberto(specs, g, variante) {
+            const titulo = `${g.nome} — ${specs.assunto || 'Open World Adventure'}`;
+            const mapa = variante === 0 ? {chao:'#164e63',grama:'#0e7490',agua:'#083344'} : variante === 1 ? {chao:'#14532d',grama:'#166534',agua:'#075985'} : {chao:'#312e81',grama:'#4338ca',agua:'#111827'};
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#020617;color:white;font-family:Arial}canvas{display:block;width:100vw;height:100vh}#hud{position:fixed;left:14px;right:14px;top:12px;display:flex;justify-content:space-between;font-weight:bold;text-shadow:0 2px 5px #000}#quest{position:fixed;top:48px;left:14px;padding:10px 14px;background:#020617bb;border:1px solid ${g.cor};border-radius:12px}.pad{display:none;position:fixed;bottom:18px;left:18px;grid-template-columns:56px 56px 56px;gap:5px}.pad button,#dash{width:56px;height:56px;border-radius:15px;border:1px solid #fff6;background:#ffffff22;color:white;font-size:23px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#dash{display:none;position:fixed;right:25px;bottom:38px;width:78px;height:78px;border-radius:50%;background:${g.cor}aa;font-size:15px;font-weight:bold}#win{display:none;position:fixed;inset:0;background:#020617dd;place-items:center;text-align:center}#win button{padding:14px 24px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#dash{display:block}}</style></head><body><canvas id="c"></canvas><div id="hud"><span>🌍 ${titulo}</span><span>Crystals: <b id="score">0</b>/20 • Lives: <b id="lives">5</b></span></div><div id="quest">Explore the open world, activate 3 ancient towers and collect 20 crystals.</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="dash">DASH</button><div id="win"><div><h1 id="endTitle">World Complete!</h1><p id="endText"></p><button onclick="start()">Explore Again</button></div></div><script>
+const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crystals=[],enemies=[],towers=[],trees=[],win=document.querySelector('#win'),endTitle=document.querySelector('#endTitle'),endText=document.querySelector('#endText');let p,score,lives,last,run,camX,camY;function resize(){c.width=innerWidth;c.height=innerHeight}onresize=resize;resize();onkeydown=e=>{K[e.key]=1;if(e.code==='Space')dash()};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#dash').onpointerdown=dash;function rnd(m=1){return Math.random()*m}function place(a,n,type){for(let i=0;i<n;i++)a.push({x:100+rnd(WORLD-200),y:100+rnd(WORLD-200),r:type==='tower'?42:type==='enemy'?20:14,on:false})}function start(){p={x:WORLD/2,y:WORLD/2,r:18,dash:0,inv:0};score=0;lives=5;run=true;crystals.length=enemies.length=towers.length=trees.length=0;place(crystals,45,'crystal');place(enemies,34,'enemy');place(towers,3,'tower');place(trees,140,'tree');document.querySelector('#win').style.display='none';last=performance.now();requestAnimationFrame(loop)}function dash(){if(p.dash<=0)p.dash=1.1}function hit(a,b,n=0){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r+n}function finish(ok){run=false;endTitle.textContent=ok?'World Complete!':'Adventure Over';endText.textContent='Crystals collected: '+score;win.style.display='grid'}function loop(t){if(!run)return;let d=Math.min(.033,(t-last)/1000);last=t;p.dash=Math.max(0,p.dash-d);p.inv=Math.max(0,p.inv-d);let v=p.dash>0?650:270,dx=(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),dy=(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0),len=Math.hypot(dx,dy)||1;p.x=Math.max(25,Math.min(WORLD-25,p.x+dx/len*v*d));p.y=Math.max(25,Math.min(WORLD-25,p.y+dy/len*v*d));enemies.forEach(e=>{let a=Math.atan2(p.y-e.y,p.x-e.x);e.x+=Math.cos(a)*(55+(score/3))*d;e.y+=Math.sin(a)*(55+(score/3))*d;if(hit(p,e)&&p.inv<=0){lives--;p.inv=1.4;if(lives<=0)finish(false)}});for(let i=crystals.length-1;i>=0;i--)if(hit(p,crystals[i])){crystals.splice(i,1);score++}towers.forEach(q=>{if(hit(p,q,18))q.on=true});if(score>=20&&towers.every(q=>q.on))finish(true);camX=Math.max(0,Math.min(WORLD-innerWidth,p.x-innerWidth/2));camY=Math.max(0,Math.min(WORLD-innerHeight,p.y-innerHeight/2));draw();document.querySelector('#score').textContent=score;document.querySelector('#lives').textContent=lives;requestAnimationFrame(loop)}function draw(){x.fillStyle='${mapa.chao}';x.fillRect(0,0,c.width,c.height);x.save();x.translate(-camX,-camY);x.fillStyle='${mapa.agua}';for(let i=0;i<12;i++){x.beginPath();x.arc((i*367)%WORLD,(i*743)%WORLD,130,0,7);x.fill()}x.fillStyle='${mapa.grama}';trees.forEach(q=>{x.beginPath();x.arc(q.x,q.y,18,0,7);x.fill()});x.fillStyle='#fde047';crystals.forEach(q=>{x.save();x.translate(q.x,q.y);x.rotate(Math.PI/4);x.fillRect(-9,-9,18,18);x.restore()});towers.forEach(q=>{x.fillStyle=q.on?'${g.cor}':'#64748b';x.fillRect(q.x-22,q.y-45,44,90);x.beginPath();x.arc(q.x,q.y-48,28,0,7);x.fill()});x.fillStyle='#ef4444';enemies.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});x.fillStyle=p.inv>0?'#fff':'${g.cor}';x.beginPath();x.arc(p.x,p.y,p.r+(p.dash>0?8:0),0,7);x.fill();x.restore();let scale=130/WORLD,mx=innerWidth-145,my=70;x.fillStyle='#020617bb';x.fillRect(mx,my,130,130);x.fillStyle='${g.cor}';x.fillRect(mx+p.x*scale-2,my+p.y*scale-2,5,5);x.strokeStyle='#ffffff55';x.strokeRect(mx,my,130,130)}start();<\/script></body></html>`;
+        }
+
         // ================= MOTOR COMBINATÓRIO DE BILHÕES DE RESPOSTAS (FRIO E LÓGICO) =================
         function escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; }
 
@@ -589,6 +729,125 @@ function nav(id, button) {
             return `${escolher(inicios)},${nome} ${escolher(meios)}. ${escolher(fins)} ${escolher(emojis)}`;
         }
 
+        // ================= GREENAI KNOWLEDGE CORE 5.0 =================
+        // Base local: funciona mesmo sem API. Aceita perguntas escritas de vários jeitos.
+        const RECEITAS = {
+            "bolo de chocolate": ["3 ovos", "2 xícaras de farinha", "1 xícara de açúcar", "1 xícara de leite", "1/2 xícara de óleo", "1 xícara de chocolate em pó", "1 colher de fermento"],
+            "bolo de cenoura": ["3 cenouras médias", "3 ovos", "1/2 xícara de óleo", "2 xícaras de açúcar", "2 e 1/2 xícaras de farinha", "1 colher de fermento"],
+            "pão": ["500 g de farinha", "10 g de fermento biológico seco", "300 ml de água morna", "1 colher de açúcar", "1 colher de sal", "2 colheres de óleo"],
+            "pão de queijo": ["500 g de polvilho", "250 ml de leite", "100 ml de óleo", "2 ovos", "250 g de queijo ralado", "sal"],
+            "brigadeiro": ["1 lata de leite condensado", "1 colher de manteiga", "4 colheres de chocolate em pó", "granulado"],
+            "panqueca": ["1 xícara de farinha", "1 xícara de leite", "1 ovo", "1 colher de óleo", "1 pitada de sal"],
+            "pizza": ["500 g de farinha", "10 g de fermento", "300 ml de água", "2 colheres de azeite", "sal", "molho e cobertura"],
+            "cookie": ["2 xícaras de farinha", "1 xícara de açúcar", "100 g de manteiga", "1 ovo", "1 colher de fermento", "gotas de chocolate"],
+            "brownie": ["200 g de chocolate", "150 g de manteiga", "3 ovos", "1 xícara de açúcar", "1 xícara de farinha"],
+            "pudim": ["1 lata de leite condensado", "a mesma medida de leite", "3 ovos", "1 xícara de açúcar para a calda"],
+            "mousse de maracujá": ["1 lata de leite condensado", "1 caixa de creme de leite", "1 medida de suco concentrado de maracujá"],
+            "arroz": ["1 xícara de arroz", "2 xícaras de água", "alho", "óleo", "sal"],
+            "feijão": ["2 xícaras de feijão", "água", "alho", "cebola", "louro", "sal"],
+            "macarrão": ["500 g de macarrão", "água", "sal", "molho de tomate", "alho e cebola"],
+            "lasanha": ["massa de lasanha", "molho", "500 g de carne moída", "presunto", "queijo", "cebola e alho"],
+            "omelete": ["2 ovos", "sal", "pimenta", "queijo", "tomate e cheiro-verde opcionais"],
+            "purê de batata": ["5 batatas", "1 colher de manteiga", "1/2 xícara de leite", "sal"],
+            "sopa de legumes": ["batata", "cenoura", "abóbora", "chuchu", "cebola", "alho", "água e sal"],
+            "salada": ["alface", "tomate", "cenoura", "pepino", "azeite", "limão e sal"],
+            "vitamina de banana": ["2 bananas", "400 ml de leite", "aveia", "açúcar ou mel opcional"],
+            "chocolate quente": ["500 ml de leite", "3 colheres de chocolate em pó", "1 colher de amido", "açúcar"],
+            "café": ["500 ml de água", "3 colheres de café moído", "açúcar opcional"],
+            "limonada": ["3 limões", "1 litro de água", "açúcar", "gelo"],
+            "torta de frango": ["2 xícaras de farinha", "2 xícaras de leite", "3 ovos", "1/2 xícara de óleo", "fermento", "frango desfiado temperado"],
+            "coxinha": ["2 xícaras de caldo", "2 xícaras de farinha", "1 colher de manteiga", "frango desfiado", "farinha de rosca"],
+            "hambúrguer": ["500 g de carne moída", "sal", "pimenta", "pão", "queijo", "salada e molho"],
+            "batata frita": ["batatas", "óleo", "sal"],
+            "pipoca": ["1/2 xícara de milho", "óleo", "sal ou açúcar"],
+            "mingau": ["500 ml de leite", "3 colheres de aveia ou amido", "açúcar", "canela"],
+            "waffle": ["2 xícaras de farinha", "2 ovos", "1 e 1/2 xícara de leite", "3 colheres de manteiga", "fermento", "açúcar"]
+        };
+
+        function localizarReceita(t) {
+            const nomes = Object.keys(RECEITAS).sort((a,b) => b.length-a.length);
+            return nomes.find(nome => t.includes(nome));
+        }
+
+        function responderReceita(nome) {
+            const i = RECEITAS[nome];
+            let preparo = `Misture e prepare os ingredientes de ${nome} na ordem indicada.`;
+            if (/bolo|brownie|cookie|torta/.test(nome)) preparo += " Asse em forno preaquecido a 180 °C e acompanhe até ficar pronto.";
+            else if (nome === "brigadeiro") preparo = "Leve tudo ao fogo baixo, mexendo até desgrudar da panela. Espere esfriar e enrole.";
+            else if (nome === "pudim") preparo = "Faça a calda, bata os demais ingredientes e asse em banho-maria até firmar.";
+            else if (/arroz/.test(nome)) preparo = "Refogue o alho, junte o arroz, a água e o sal; cozinhe tampado em fogo baixo.";
+            else if (/feijão/.test(nome)) preparo = "Deixe de molho, cozinhe na pressão e finalize com alho, cebola e sal.";
+            else if (/macarrão/.test(nome)) preparo = "Cozinhe em água com sal até ficar al dente, escorra e misture ao molho.";
+            else if (/omelete/.test(nome)) preparo = "Bata os ovos, misture os recheios e doure dos dois lados em frigideira.";
+            else if (/pipoca/.test(nome)) preparo = "Aqueça o óleo com o milho em panela tampada e mexa a panela até os estouros pararem.";
+            return `🍳 RECEITA: ${nome.toUpperCase()}\n\nIngredientes:\n• ${i.join("\n• ")}\n\nModo de preparo:\n${preparo}\n\nCuidado com forno, fogo, óleo quente e facas; peça ajuda a um adulto quando necessário.`;
+        }
+
+        const GUIAS_DEV = [
+            {k:["unity","rigidbody"], r:"Na Unity, Rigidbody aplica física ao objeto. Adicione o componente, mantenha Use Gravity ligado e mova pelo Rigidbody em FixedUpdate. Para colisões, os dois objetos precisam de Collider e pelo menos um deles precisa de Rigidbody."},
+            {k:["unity","camera"], r:"Para câmera FPS sem Cinemachine: coloque uma Camera como filha do Player, leia Mouse X/Y, gire o Player no eixo Y e a Camera no eixo X. Trave o cursor com Cursor.lockState = CursorLockMode.Locked."},
+            {k:["unity","textmeshpro"], r:"Use TMPro.TMP_Text para textos e TMPro.TMP_InputField para entrada. Importe os recursos em Window > TextMeshPro > Import TMP Essential Resources."},
+            {k:["unity","salvar"], r:"Para salvar na Unity, crie uma classe [System.Serializable], converta com JsonUtility.ToJson e grave em Application.persistentDataPath. Carregue com File.ReadAllText e JsonUtility.FromJson."},
+            {k:["unity","json"], r:"O JSON da Unity deve ficar em Application.persistentDataPath, nunca dentro de Assets no jogo compilado. Salve apenas dados simples; referências a GameObjects precisam virar IDs."},
+            {k:["unity","cena"], r:"Para trocar de cena, adicione a cena em Build Settings e use SceneManager.LoadScene(\"NomeDaCena\"). Inclua using UnityEngine.SceneManagement; no começo do script."},
+            {k:["unity","apk"], r:"Para gerar APK: instale Android Build Support, SDK, NDK e OpenJDK; escolha Android em Build Settings, use Switch Platform, defina Package Name e deixe Build App Bundle desmarcado."},
+            {k:["unity","webgl"], r:"Para WebGL, reduza texturas e áudio, evite arquivos gigantes, use compressão Brotli/Gzip compatível com o servidor e teste por HTTP; abrir index.html diretamente pode falhar."},
+            {k:["unity","fps"], r:"Um FPS básico precisa de CharacterController, câmera filha, movimento, gravidade, raycast para tiros, vida, munição e inimigos com estados de patrulha, perseguição e ataque."},
+            {k:["unity","otimizar"], r:"Para otimizar Unity: use iluminação baked, occlusion culling, LOD, object pooling, texturas comprimidas, poucos materiais, sombras curtas e limite de FPS. Evite Instantiate/Destroy repetidamente."},
+            {k:["unity","erro"], r:"Para corrigir erro na Unity, leia a primeira mensagem vermelha completa, clique duas vezes nela e corrija primeiro o erro mais antigo. Um único erro pode criar vários outros."},
+            {k:["scratch","movimento"], r:"No Scratch, use quando bandeira clicada → para sempre → se tecla direita pressionada, mude x por 5; esquerda, mude x por -5; cima e baixo alteram y."},
+            {k:["scratch","colisao"], r:"Para colisão no Scratch: mova o personagem, verifique se está tocando a cor/objeto da parede e desfaça o movimento. Isso impede atravessar obstáculos."},
+            {k:["scratch","clone"], r:"Clones servem para criar muitos objetos a partir de um ator. Use crie clone de mim mesmo e programe quando eu começar como clone; apague o clone quando não for mais necessário."},
+            {k:["scratch","variavel"], r:"Variáveis guardam números ou textos. Escolha 'para todos os atores' para pontuação global e 'apenas para este ator' para dados individuais de clones."},
+            {k:["scratch","jogo"], r:"Para criar um jogo no Scratch, faça nesta ordem: jogador, controles, colisões, objetivo, pontuação, inimigos, telas de início/fim, sons e testes."},
+            {k:["godot","movimento"], r:"No Godot 4, use CharacterBody3D, altere velocity, chame move_and_slide() em _physics_process e configure as ações no Input Map."},
+            {k:["godot","cena"], r:"No Godot, cenas são árvores de nós reutilizáveis. Salve personagens como cenas próprias e instancie com PackedScene.instantiate()."},
+            {k:["godot","sinal"], r:"Signals desacoplam objetos. Conecte um sinal como pressed de Button a uma função, ou declare signal evento e use evento.emit(dados)."},
+            {k:["godot","salvar"], r:"No Godot, salve em user:// usando FileAccess. JSON.stringify transforma dados em texto e JSON.parse_string recupera os dados."},
+            {k:["gpt","api"], r:"GPT é uma família de modelos de linguagem. Para usar em um aplicativo, normalmente é preciso um backend seguro chamando uma API. Nunca coloque uma chave secreta diretamente no HTML público."},
+            {k:["gpt","voce"], r:"O ChatGPT é um assistente baseado em modelos GPT. Ele trabalha com linguagem, código, análise e criação, mas pode errar e não conhece automaticamente dados privados ou acontecimentos não fornecidos."},
+            {k:["html","site"], r:"Um site usa HTML para estrutura, CSS para aparência e JavaScript para comportamento. Separe as partes, use elementos semânticos, layout responsivo e valide no console do navegador."},
+            {k:["javascript","erro"], r:"Abra F12 > Console e leia a primeira exceção. Verifique nome de variável, elemento inexistente, ordem de carregamento, parênteses e chamadas assíncronas com await."},
+            {k:["python","jogo"], r:"Para jogos em Python, Pygame é uma opção 2D. Organize o loop em eventos, atualização, colisões e renderização; use delta time para movimento estável."}
+        ];
+
+        const CONHECIMENTO_GERAL = [
+            {p:/\b(o que e|explique).*inteligencia artificial\b/, r:"Inteligência artificial é a área que cria sistemas capazes de reconhecer padrões, gerar conteúdo, tomar decisões ou resolver tarefas normalmente associadas à inteligência humana."},
+            {p:/\b(o que e|explique).*computador\b/, r:"Computador é uma máquina que recebe dados, executa instruções e produz resultados. Processador calcula, memória RAM mantém dados temporários e armazenamento guarda arquivos."},
+            {p:/\b(o que e|explique).*internet\b/, r:"Internet é uma rede mundial de redes. Dispositivos trocam pacotes de dados usando protocolos; DNS transforma nomes de sites em endereços e servidores entregam conteúdo."},
+            {p:/\b(o que e|explique).*gravidade\b/, r:"Gravidade é a interação que atrai corpos com massa. Perto da Terra, objetos aceleram aproximadamente 9,8 m/s² quando a resistência do ar é ignorada."},
+            {p:/\b(o que e|explique).*fotossintese\b/, r:"Fotossíntese é o processo em que plantas, algas e algumas bactérias usam luz para transformar água e dióxido de carbono em energia química, liberando oxigênio."},
+            {p:/\b(o que e|explique).*dna\b/, r:"DNA é a molécula que armazena instruções genéticas. Seus trechos, os genes, ajudam a orientar a produção de proteínas e características dos seres vivos."},
+            {p:/\b(o que e|explique).*atomo\b/, r:"Átomo é uma unidade da matéria formada por núcleo com prótons e nêutrons e uma região ocupada por elétrons. Elementos químicos são definidos pelo número de prótons."},
+            {p:/\b(o que e|explique).*buraco negro\b/, r:"Buraco negro é uma região onde a gravidade é tão intensa que, depois do horizonte de eventos, nem a luz consegue escapar. Muitos surgem do colapso de estrelas massivas."},
+            {p:/\b(o que e|explique).*democracia\b/, r:"Democracia é uma forma de organização política em que o poder deriva da população, exercido diretamente ou por representantes, com eleições, direitos e instituições."},
+            {p:/\b(o que e|explique).*filosofia\b/, r:"Filosofia investiga questões fundamentais sobre realidade, conhecimento, ética, mente, linguagem e política por meio de argumentos e análise conceitual."},
+            {p:/\b(o que e|explique).*musica\b/, r:"Música organiza sons e silêncios por elementos como ritmo, melodia, harmonia, timbre e dinâmica. Estilos diferentes combinam esses elementos de maneiras próprias."},
+            {p:/\b(cores primarias|cor primaria)\b/, r:"Na luz, as cores primárias são vermelho, verde e azul (RGB). Em pigmentos e impressão, usa-se normalmente ciano, magenta e amarelo, com preto no sistema CMYK."},
+            {p:/\b(maior planeta|planeta maior)\b/, r:"Júpiter é o maior planeta do Sistema Solar."},
+            {p:/\b(planeta vermelho)\b/, r:"Marte é chamado de planeta vermelho por causa dos óxidos de ferro presentes em sua superfície."},
+            {p:/\b(quantos planetas)\b/, r:"O Sistema Solar possui oito planetas reconhecidos: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno."}
+        ];
+
+        function responderConhecimentoLocal(normalized) {
+            if (/\b(receita|como fazer|ingredientes|preparar|cozinhar)\b/.test(normalized)) {
+                const receita = localizarReceita(normalized);
+                if (receita) return responderReceita(receita);
+                if (/\b(receitas|o que sabe cozinhar|lista de receitas)\b/.test(normalized)) {
+                    return "🍽️ Eu conheço estas receitas:\n• " + Object.keys(RECEITAS).join("\n• ") + "\n\nPergunte, por exemplo: como fazer bolo de chocolate?";
+                }
+            }
+            for (const guia of GUIAS_DEV) {
+                if (guia.k.every(p => normalized.includes(p))) return `🛠️ ${guia.r}`;
+            }
+            for (const item of CONHECIMENTO_GERAL) if (item.p.test(normalized)) return `🧠 ${item.r}`;
+            if (/\b(diferenca entre|compare)\b/.test(normalized) && normalized.includes("unity") && normalized.includes("godot"))
+                return "Unity usa principalmente C# e possui um ecossistema enorme; Godot é aberto, leve e usa GDScript, C# ou C++. Para projetos que já existem na Unity, continue nela. Para projetos leves e livres, Godot é uma ótima opção.";
+            if (/\b(diferenca entre|compare)\b/.test(normalized) && normalized.includes("scratch") && normalized.includes("unity"))
+                return "Scratch programa com blocos e é ótimo para aprender lógica e criar jogos 2D simples. Unity usa C# e permite jogos 2D/3D maiores, builds para várias plataformas e sistemas mais avançados.";
+            return null;
+        }
+
         // ================= MODO NATURAL NORMALIZADO (SEM PAIXÃO) =================
         function gerarRespostaNaturalNormal(texto, modo) {
             const nivel = modo === 'natural_4.9' ? 3 : 1; 
@@ -622,6 +881,8 @@ function nav(id, button) {
                 setTimeout(() => { triggerRedCine(); }, 600);
                 return "### 📺 Inicializando Protocolo Central RedCine...\n\nTudo pronto! Calibrei o array de dados e os vídeos estão sincronizados! 🎬🍿";
             }
+            const respostaLocal = responderConhecimentoLocal(normalized);
+            if (respostaLocal) return respostaLocal;
             if (/\b(vc sabe de tudo|voce sabe de tudo|sabe de tudo)\b/.test(normalized)) {
                 const agora = new Date();
                 const hhmmss = agora.toLocaleTimeString('pt-BR', { hour12: false });
@@ -629,7 +890,9 @@ function nav(id, button) {
             }
             if (/\b(melhor jogo do mundo)\b/.test(normalized)) return "Paradox Space Remake!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 🎮🏆🔥";
             if (/\b(o que e scratch|scratch|o que e o scratch)\b/.test(normalized)) return gerarRespostaScratch(currentChat);
-            if (/\b(o que e unity|unity|o que e a unity)\b/.test(normalized)) return "Unity é um dos motores de jogo (game engines) mais famosos e potentes do mundo! Muito usado para criar jogos 2D, 3D, realidade virtual e aumentada. 🎮🧊";
+            if (/\b(o que e unity|unity|o que e a unity)\b/.test(normalized)) return "Unity é uma game engine para criar jogos 2D e 3D usando principalmente C#. Ela possui editor visual, física, animação, áudio, UI e exportação para Windows, Linux, Android, iOS e WebGL. 🎮🧊";
+            if (/\b(o que e godot|godot|o que e a godot)\b/.test(normalized)) return "Godot é uma game engine gratuita e de código aberto para jogos 2D e 3D. Ela organiza o jogo em nós e cenas e aceita GDScript, C# e extensões em C++. 🤖🎮";
+            if (/\b(o que e gpt|chatgpt|openai)\b/.test(normalized)) return "GPT é um modelo de linguagem capaz de interpretar e gerar texto e código. ChatGPT é um aplicativo que usa modelos GPT; OpenAI é a organização que desenvolve esses sistemas. Uma IA pode errar, então informações importantes devem ser verificadas. 🧠";
             if (/\b(o que e youtube|youtube|o que e o youtube)\b/.test(normalized)) return "O YouTube é a maior plataforma de compartilhamento de vídeos do mundo, criada em 2005 e comprada pelo Google. É onde a mágica audiovisual acontece! 📺▶️";
             if (/\b(o que e o pi|o que e pi|valor de pi)\b/.test(normalized)) return "O Pi (π) é uma constante matemática infinita que começa com 3,14159265... Ele representa a proporção mágica entre a circunferência de um círculo e o seu diâmetro! 🥧📐";
             if (/\b(como calcular raiz|ensine a calcular raiz|calcular raiz)\b/.test(normalized)) return "É um truque matemático genial! Para calcular qualquer raiz (quadrada, cúbica, quarta, oitava...), basta transformar a raiz em uma potência de fração (potenciação fracionária). Exemplo: a raiz quadrada de 9 é 9^(1/2). A raiz cúbica de 27 é 27^(1/3). A oitava raiz de 256 é 256^(1/8). Na programação, usamos Math.pow(numero, 1/raiz)! 🧮💡";
@@ -731,8 +994,9 @@ function nav(id, button) {
             const msgId = 'msg_' + Date.now();
 
             if (currentAiMode === 'canvas') {
+                const pedidoJogo = detectarPedidoJogo(text);
                 const loadingDiv = add("GreenAI", `
-                    <div style="font-weight:bold; margin-bottom:10px;">Compilando arquitetura HTML e instanciando 10 páginas...</div>
+                    <div style="font-weight:bold; margin-bottom:10px;">${pedidoJogo ? 'Compilando jogo HTML jogável...' : 'Criando site moderno e responsivo...'}</div>
                     <progress id="prog-${msgId}" value="0" max="100"></progress>
                 `, msgId);
 
@@ -746,11 +1010,11 @@ function nav(id, button) {
                     if (prog >= 100) {
                         clearInterval(intervalo);
                         const specs = analisarPrompt(text);
-                        const htmlCompleto = gerarSiteTemplate(getNextTemplateId(), specs);
+                        const htmlCompleto = pedidoJogo ? gerarJogoVariado(specs, text) : gerarSiteProfissional(getNextTemplateId(), specs, text);
                         const siteId = 'site_' + Date.now();
                         window.sitesGeradosMemoria[siteId] = htmlCompleto;
                         
-                        const respostaExata = `eu já terminei o seu site, qualquer melhoria, é só pedir!<br><br><button class="button" onclick="abrirPreviewSalvo('${siteId}', '${specs.assunto}')">Visualizar Site</button>`;
+                        const respostaExata = `Eu já terminei ${pedidoJogo ? 'o seu jogo' : 'o seu site'}!<br><br><button class="button" onclick="abrirPreviewSalvo('${siteId}', '${specs.assunto}')">${pedidoJogo ? 'Jogar Agora' : 'Visualizar Site'}</button> <button class="button" onclick="copiarCodigoGerado('${siteId}', this)">Copiar Código</button>`;
                         
                         loadingDiv.querySelector('.msg-content').innerHTML = respostaExata;
                         save("GreenAI", respostaExata);
