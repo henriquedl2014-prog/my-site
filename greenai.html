@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GreenAI - Matriz Cinema e Suprimentos</title>
+    <title>GreenAI - Matrix Cinema and Supplies | v5</title>
 
     <style>
         :root {
@@ -70,9 +70,12 @@
         .logo { font-size: 32px; font-weight: bold; text-align: center; text-shadow: 0 0 10px var(--accent); }
         .button { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--accent); color: black; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
         .button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(58, 238, 172, 0.4); }
-        .button.tube { background: linear-gradient(135deg, #16a34a, #34d399); color: black; }
+        .button.tube { background: linear-gradient(135deg, var(--bg3), var(--accent)); color: black; box-shadow: 0 0 14px var(--accent); }
+        .button.tube:hover { box-shadow: 0 5px 18px var(--accent); }
         .button.small { padding: 8px; font-size: 12px; background: rgba(255, 255, 255, 0.15); color: white; margin-top: 5px; width: auto; min-width: 120px; }
         .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .language-select { width:100%; padding:11px 12px; border:1px solid var(--accent); border-radius:12px; background:rgba(0,0,0,.45); color:white; font-weight:bold; outline:none; cursor:pointer; }
+        .language-select option { background:#111; color:white; }
         .chat-list { flex: 1; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
         .chat-item { background: rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 10px; cursor: pointer; border-left: 3px solid transparent; }
         .chat-item:hover { background: rgba(255, 255, 255, 0.15); border-left-color: var(--accent); }
@@ -144,27 +147,32 @@
 
     <div class="welcomeScreen" id="welcomeScreen">
         <h1 class="welcomeTitle">GreenAI Matrix</h1>
-        <p class="welcomeDesc">Assistente ultra-convincente, focada e projetada com alto teor de dados lógicos... 💚</p>
-        <button class="btnStart" id="startBtn">Iniciar Conexão Suprema</button>
+        <p class="welcomeDesc" data-i18n="welcomeDesc">Assistente ultra-convincente, focada e projetada com alto teor de dados lógicos... 💚</p>
+        <button class="btnStart" id="startBtn" data-i18n="start">Iniciar Conexão Suprema</button>
     </div>
 
     <div class="appShell">
         <div class="sidebar">
             <div class="logo">GreenAI 💚</div>
-            <button class="button" onclick="newChat()">+ Novo Chat</button>
-            <button class="button" onclick="openVoice()">🎤 Modo de Voz</button>
-            <button class="button tube" onclick="triggerRedCine()">📺 RedCine</button>
-            <button class="button" onclick="toggleWiki()">🌐 Alternar Painel Web</button>
+            <button class="button" onclick="newChat()" data-i18n="newChat">+ Novo Chat</button>
+            <button class="button" onclick="openVoice()" data-i18n="voiceMode">🎤 Modo de Voz</button>
+            <button class="button tube" onclick="triggerRedCine()" data-i18n="redCine">📺 RedCine</button>
+            <button class="button" onclick="toggleWiki()" data-i18n="webPanel">🌐 Alternar Painel Web</button>
             <div class="theme-grid">
                 <button class="button" style="background:#16a34a;" onclick="setTheme('green')"></button>
                 <button class="button" style="background:#2563eb;" onclick="setTheme('blue')"></button>
                 <button class="button" style="background:#9333ea;" onclick="setTheme('purple')"></button>
                 <button class="button" style="background:#ec4899;" onclick="setTheme('pink')"></button>
-                <button class="button" style="background:#dc2626;" onclick="setTheme('red')"></button>
+                <button class="button" style="background:#ff0000;" onclick="setTheme('red')"></button>
             </div>
-            <button class="button small" onclick="exportarBackup()">💾 Exportar Backup</button>
+            <select id="languageSelect" class="language-select" onchange="setLanguage(this.value)" aria-label="Language">
+                <option value="pt">🇧🇷 Português</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="it">🇮🇹 Italiano</option>
+            </select>
+            <button class="button small" onclick="exportarBackup()" data-i18n="exportBackup">💾 Exportar Backup</button>
             <input type="file" id="arquivoImport" accept=".json" style="display:none" onchange="importarBackup(event)">
-            <button class="button small" onclick="document.getElementById('arquivoImport').click()">📂 Importar</button>
+            <button class="button small" onclick="document.getElementById('arquivoImport').click()" data-i18n="importBackup">📂 Importar</button>
             <div class="chat-list" id="chatList"></div>
         </div>
 
@@ -174,33 +182,33 @@
             <!-- SELETOR DE MODOS (Classic / Advanced) -->
             <div class="mode-selector-area">
                 <div class="mode-tabs">
-                    <button class="mode-tab-btn active" id="btn-tab-classic" onclick="openPanel('classic')">Classic Mode</button>
-                    <button class="mode-tab-btn" id="btn-tab-advanced" onclick="openPanel('advanced')">Advanced Mode</button>
+                    <button class="mode-tab-btn active" id="btn-tab-classic" onclick="openPanel('classic')" data-i18n="classicMode">Classic Mode</button>
+                    <button class="mode-tab-btn" id="btn-tab-advanced" onclick="openPanel('advanced')" data-i18n="advancedMode">Advanced Mode</button>
                 </div>
                 
                 <div id="panel-classic" class="mode-panel active">
-                    <button class="mode-opt-btn active" onclick="selectAiMode('natural_4.8', this)">Natural AI para GreenAI 4.8</button>
-                    <button class="mode-opt-btn" onclick="selectAiMode('estudos', this)">Modo de Estudos</button>
+                    <button class="mode-opt-btn active" onclick="selectAiMode('natural_4.8', this)" data-i18n="natural48">Natural AI para GreenAI 4.8</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('estudos', this)" data-i18n="studyMode">Modo de Estudos</button>
                 </div>
                 
                 <div id="panel-advanced" class="mode-panel">
-                    <button class="mode-opt-btn" onclick="selectAiMode('natural_4.9', this)">Natural AI para GreenAI 4.9</button>
-                    <button class="mode-opt-btn" onclick="selectAiMode('estudos_aprofundados', this)">Modo de Estudos Aprofundados</button>
-                    <button class="mode-opt-btn" onclick="selectAiMode('imagens', this)">Imagens & Vídeos 1.2</button>
-                    <button class="mode-opt-btn" onclick="selectAiMode('canvas', this)">Sites & Games 2.0</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('natural_4.9', this)" data-i18n="natural49">Natural AI para GreenAI 4.9</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('estudos_aprofundados', this)" data-i18n="deepStudy">Modo de Estudos Aprofundados</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('imagens', this)" data-i18n="imagesVideos">Imagens & Vídeos 1.2</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('canvas', this)" data-i18n="sitesGames">Sites & Games 2.0</button>
                 </div>
             </div>
 
             <div class="messages" id="messages"></div>
             
             <div class="input-area">
-                <input id="input" placeholder="Digite o que deseja pesquisar, gerar ou criar...">
-                <button class="button" style="width:120px;" onclick="handleSendButton()">Enviar</button>
+                <input id="input" placeholder="Digite o que deseja pesquisar, gerar ou criar..." data-i18n-placeholder="prompt">
+                <button class="button" style="width:120px;" onclick="handleSendButton()" data-i18n="send">Enviar</button>
             </div>
         </div>
 
         <div class="wikiPanel hidden" id="wikiPanel">
-            <div class="wikiHeader"><span>Navegador</span><button onclick="toggleWiki(false)" style="background:none; border:none; color:white; cursor:pointer;">❌</button></div>
+            <div class="wikiHeader"><span data-i18n="browser">Navegador</span><button onclick="toggleWiki(false)" style="background:none; border:none; color:white; cursor:pointer;">❌</button></div>
             <iframe class="wikiFrame" id="wikiFrame" src="about:blank"></iframe>
         </div>
     </div>
@@ -254,12 +262,58 @@
         const messages = document.getElementById("messages");
         const input = document.getElementById("input");
         const chatList = document.getElementById("chatList");
+
+        const I18N = {
+            pt: {
+                welcomeDesc:"Assistente ultra-convincente, focada e projetada com alto teor de dados lógicos... 💚", start:"Iniciar Conexão Suprema",
+                newChat:"+ Novo Chat", voiceMode:"🎤 Modo de Voz", redCine:"📺 RedCine", webPanel:"🌐 Alternar Painel Web",
+                exportBackup:"💾 Exportar Backup", importBackup:"📂 Importar", classicMode:"Modo Clássico", advancedMode:"Modo Avançado",
+                natural48:"IA Natural para GreenAI 4.8", studyMode:"Modo de Estudos", natural49:"IA Natural para GreenAI 4.9",
+                deepStudy:"Modo de Estudos Aprofundados", imagesVideos:"Imagens & Vídeos 1.2", sitesGames:"Sites & Jogos 2.0", prompt:"Digite o que deseja pesquisar, gerar ou criar...",
+                send:"Enviar", browser:"Navegador", you:"Você", processing:"Processando lógicas... ⏳", analyzing:"Analisando variáveis da mensagem... 🧠⏳",
+                rendering:"Acionando renderização visual nas APIs... ⏳🎨", compilingGame:"Compilando jogo HTML jogável...", creatingSite:"Criando site moderno e responsivo...",
+                gameReady:"Eu já terminei o seu jogo!", siteReady:"Eu já terminei o seu site!", playNow:"Jogar Agora", viewSite:"Visualizar Site", copyCode:"Copiar Código"
+            },
+            en: {
+                welcomeDesc:"A focused, highly convincing assistant designed with powerful logical data... 💚", start:"Start Supreme Connection",
+                newChat:"+ New Chat", voiceMode:"🎤 Voice Mode", redCine:"📺 RedCine", webPanel:"🌐 Toggle Web Panel",
+                exportBackup:"💾 Export Backup", importBackup:"📂 Import", classicMode:"Classic Mode", advancedMode:"Advanced Mode",
+                natural48:"Natural AI for GreenAI 4.8", studyMode:"Study Mode", natural49:"Natural AI for GreenAI 4.9",
+                deepStudy:"Advanced Study Mode", imagesVideos:"Images & Videos 1.2", sitesGames:"Sites & Games 2.0", prompt:"Type what you want to search, generate, or create...",
+                send:"Send", browser:"Browser", you:"You", processing:"Processing logic... ⏳", analyzing:"Analyzing message variables... 🧠⏳",
+                rendering:"Starting visual rendering APIs... ⏳🎨", compilingGame:"Compiling playable HTML game...", creatingSite:"Creating a modern responsive website...",
+                gameReady:"Your game is ready!", siteReady:"Your website is ready!", playNow:"Play Now", viewSite:"View Website", copyCode:"Copy Code"
+            },
+            it: {
+                welcomeDesc:"Un'assistente convincente e precisa, progettata con potenti dati logici... 💚", start:"Avvia Connessione Suprema",
+                newChat:"+ Nuova Chat", voiceMode:"🎤 Modalità Voce", redCine:"📺 RedCine", webPanel:"🌐 Mostra/Nascondi Pannello Web",
+                exportBackup:"💾 Esporta Backup", importBackup:"📂 Importa", classicMode:"Modalità Classica", advancedMode:"Modalità Avanzata",
+                natural48:"IA Naturale per GreenAI 4.8", studyMode:"Modalità Studio", natural49:"IA Naturale per GreenAI 4.9",
+                deepStudy:"Modalità Studio Avanzato", imagesVideos:"Immagini e Video 1.2", sitesGames:"Siti e Giochi 2.0", prompt:"Scrivi cosa vuoi cercare, generare o creare...",
+                send:"Invia", browser:"Browser", you:"Tu", processing:"Elaborazione logica... ⏳", analyzing:"Analisi delle variabili del messaggio... 🧠⏳",
+                rendering:"Avvio del rendering visivo... ⏳🎨", compilingGame:"Compilazione del gioco HTML...", creatingSite:"Creazione di un sito moderno e responsive...",
+                gameReady:"Il tuo gioco è pronto!", siteReady:"Il tuo sito è pronto!", playNow:"Gioca Ora", viewSite:"Visualizza Sito", copyCode:"Copia Codice"
+            }
+        };
+        let currentLanguage = localStorage.getItem("greenai_language") || "pt";
+        function tr(key) { return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.pt[key] || key; }
+        function setLanguage(lang) {
+            if (!I18N[lang]) return;
+            currentLanguage = lang;
+            localStorage.setItem("greenai_language", lang);
+            document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
+            document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = tr(el.dataset.i18n));
+            document.querySelectorAll("[data-i18n-placeholder]").forEach(el => el.placeholder = tr(el.dataset.i18nPlaceholder));
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.value = lang;
+            if (typeof loadMessages === "function") loadMessages();
+        }
         
         let currentAiMode = "natural_4.8"; // Modo Padrão
         window.sitesGeradosMemoria = {};
         let templateBag = Array.from({length: 20}, (_, i) => i); 
         let currentChat = localStorage.getItem("greenai_chat") || "Principal";
-        const CHAVES_RESERVADAS = ["greenai_chat", "greenai_voice_name", "greenai_voice_uri", "greenai_theme", "greenai_estilo"];
+        const CHAVES_RESERVADAS = ["greenai_chat", "greenai_voice_name", "greenai_voice_uri", "greenai_theme", "greenai_estilo", "greenai_language"];
         let ultimoHtmlGerado = "";
         let projetoAtualId = "";
 
@@ -477,7 +531,7 @@
                 blue: ["#02111b", "#0c4a6e", "#2563eb", "#60a5fa"],
                 purple: ["#1e0033", "#581c87", "#9333ea", "#c084fc"],
                 pink: ["#3b001f", "#9d174d", "#ec4899", "#f9a8d4"],
-                red: ["#2b0000", "#7f1d1d", "#dc2626", "#f87171"]
+                red: ["#070000", "#320000", "#8f0000", "#ff1616"]
             };
             if (!paletas[t]) return;
             document.documentElement.style.setProperty("--bg1", paletas[t][0]);
@@ -502,7 +556,7 @@
             const termos = [
                 'jogo','jogos','game','games','minigame','minigames','fps','shooter','arcade','clicker',
                 'tiro','atirar','arma','inimigo','aventura','acao','luta','arena','sobrevivencia',
-                'corrida','carro','racing','plataforma','pular','puzzle','quebra-cabeca','rpg','simulador'
+                'corrida','carro','racing','plataforma','pular','puzzle','quebra-cabeca','rpg','simulador','3d','mundo aberto'
             ];
             return termos.some(termo => t.includes(termo));
         }
@@ -654,12 +708,19 @@ const c=document.querySelector('#game'),x=c.getContext('2d'),keys={},enemies=[],
             const categoria = /corrida|carro|racing|race/.test(texto) ? 'corrida' : /plataforma|platform|pular|jump/.test(texto) ? 'plataforma' : /puzzle|quebra.?cabe[cç]a|mem[oó]ria/.test(texto) ? 'puzzle' : /aventura|explor|quest|tesouro/.test(texto) ? 'aventura' : /a[cç][aã]o|luta|arena|sobreviv/.test(texto) ? 'acao' : 'tiro';
             const numeroPedido = Math.max(0, Math.min(2, (parseInt((texto.match(/\b[123]\b/)||[])[0])||1)-1));
             const g = grupos[categoria][numeroPedido];
+            if (/\b3d\b/.test(texto)) return gerarJogo3D(specs, g, categoria);
             if (categoria === 'aventura') return gerarAventuraMundoAberto(specs, g, numeroPedido);
             const aventura = categoria === 'aventura';
             const acao = categoria === 'acao';
             const titulo = `${g.nome} — ${specs.assunto || 'GreenAI Game'}`;
             return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:${g.fundo};color:#fff;font-family:Arial}canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at top,${g.cor}33,${g.fundo} 68%)}#hud{position:fixed;inset:12px 14px auto;display:flex;justify-content:space-between;font-weight:800;text-shadow:0 2px 6px #000}#mission{position:fixed;top:45px;width:100%;text-align:center;color:${g.cor}}#help{position:fixed;bottom:12px;width:100%;text-align:center;opacity:.7}.pad{display:none;position:fixed;bottom:20px;left:18px;grid-template-columns:54px 54px 54px;gap:5px}.pad button,#power{border:1px solid #fff5;background:#ffffff22;color:#fff;border-radius:14px;width:54px;height:54px;font-size:22px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#power{display:none;position:fixed;right:24px;bottom:38px;width:76px;height:76px;border-radius:50%;background:${g.cor}99}#over{display:none;position:fixed;inset:0;background:#000d;place-items:center;text-align:center}#over button{padding:14px 22px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#power{display:block}#help{display:none}}</style></head><body><canvas id="c"></canvas><div id="hud"><span>${g.icone} ${titulo}</span><span>Score <b id="s">0</b> • Lives <b id="l">3</b> • Level <b id="lv">1</b></span></div><div id="mission">${g.objetivo}</div><div id="help">WASD/Arrows to move • Space for power</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="power">${aventura?'⚡':'●'}</button><div id="over"><div><h1>Game Over</h1><p id="result"></p><button onclick="start()">Play Again</button></div></div><script>
 const c=document.querySelector('#c'),x=c.getContext('2d'),K={},foes=[],shots=[],gems=[];const S=document.querySelector('#s'),L=document.querySelector('#l'),LV=document.querySelector('#lv'),O=document.querySelector('#over'),R=document.querySelector('#result');let p,score,lives,level,last,timer,run;function resize(){c.width=innerWidth;c.height=innerHeight}onresize=resize;resize();onkeydown=e=>{K[e.key]=1;if(e.code==='Space')power()};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#power').onpointerdown=power;function start(){p={x:innerWidth/2,y:innerHeight-90,r:18,cool:0,shield:0};score=0;lives=3;level=1;last=performance.now();timer=0;run=true;foes.length=shots.length=gems.length=0;O.style.display='none';requestAnimationFrame(loop)}function power(){if(!run||p.cool>0)return;p.cool=${aventura?'1.5':acao?'.45':'.22'};${aventura?'p.shield=1.2;':acao?"for(let a=0;a<6;a++)shots.push({x:p.x,y:p.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520});":"shots.push({x:p.x,y:p.y-22,vx:0,vy:-650});"}}function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}function end(){run=false;R.textContent='Final score: '+score;O.style.display='grid'}function loop(t){if(!run)return;let d=Math.min(.033,(t-last)/1000);last=t;level=1+Math.floor(score/120);p.cool=Math.max(0,p.cool-d);p.shield=Math.max(0,p.shield-d);let mv=280;if(K.ArrowLeft||K.a)p.x-=mv*d;if(K.ArrowRight||K.d)p.x+=mv*d;if(K.ArrowUp||K.w)p.y-=mv*d;if(K.ArrowDown||K.s)p.y+=mv*d;p.x=Math.max(20,Math.min(innerWidth-20,p.x));p.y=Math.max(70,Math.min(innerHeight-20,p.y));timer-=d;if(timer<=0){let good=${aventura}&&Math.random()<.55;(good?gems:foes).push({x:25+Math.random()*(innerWidth-50),y:-25,r:good?12:18,v:${g.vel}+level*14});timer=Math.max(.22,.85-level*.04)}foes.forEach(e=>e.y+=e.v*d);gems.forEach(e=>e.y+=e.v*d);shots.forEach(q=>{q.x+=q.vx*d;q.y+=q.vy*d});for(let i=foes.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--)if(hit(foes[i],{...shots[j],r:5})){foes.splice(i,1);shots.splice(j,1);score+=10;break}if(foes[i]&&hit(foes[i],p)){foes.splice(i,1);if(!p.shield)lives--;if(lives<=0)end()}else if(foes[i]&&foes[i].y>innerHeight+30){foes.splice(i,1);${aventura?'':'lives--;if(lives<=0)end()'}}}for(let i=gems.length-1;i>=0;i--){if(hit(gems[i],p)){gems.splice(i,1);score+=20}else if(gems[i].y>innerHeight)gems.splice(i,1)}x.clearRect(0,0,c.width,c.height);x.fillStyle='${g.cor}';x.beginPath();x.arc(p.x,p.y,p.r+(p.shield?7:0),0,7);x.fill();x.fillStyle='#ef4444';foes.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});x.fillStyle='#fde047';gems.forEach(e=>{x.fillRect(e.x-10,e.y-10,20,20)});shots.forEach(q=>x.fillRect(q.x-3,q.y-7,6,14));S.textContent=score;L.textContent=lives;LV.textContent=level;requestAnimationFrame(loop)}start();<\/script></body></html>`;
+        }
+
+        function gerarJogo3D(specs, g, categoria) {
+            const titulo = `${g.nome} 3D — ${specs.assunto || 'GreenAI World'}`;
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#020617;color:#fff;font-family:Arial}canvas{display:block}#hud{position:fixed;inset:12px 14px auto;display:flex;justify-content:space-between;z-index:4;font-weight:bold;text-shadow:0 2px 6px #000}#quest{position:fixed;top:48px;left:14px;z-index:4;background:#020617bb;border:1px solid ${g.cor};padding:10px 14px;border-radius:12px}.pad{display:none;position:fixed;bottom:18px;left:18px;z-index:5;grid-template-columns:56px 56px 56px;gap:5px}.pad button,#action{width:56px;height:56px;border-radius:15px;border:1px solid #fff6;background:#ffffff26;color:#fff;font-size:22px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#action{display:none;position:fixed;right:25px;bottom:38px;z-index:5;width:80px;height:80px;border-radius:50%;background:${g.cor}bb;font-size:14px;font-weight:bold}#done{display:none;position:fixed;inset:0;z-index:10;background:#020617dd;place-items:center;text-align:center}#done button{padding:14px 24px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#action{display:block}}</style></head><body><div id="hud"><span>🌐 ${titulo}</span><span>Crystals: <b id="score">0</b>/15 • Lives: <b id="lives">5</b></span></div><div id="quest">Explore the 3D open world, collect crystals and activate all towers.</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="action">DASH</button><div id="done"><div><h1 id="endTitle">World Complete!</h1><p id="endText"></p><button onclick="location.reload()">Play Again</button></div></div><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script><script>
+const scene=new THREE.Scene();scene.background=new THREE.Color('${g.fundo}');scene.fog=new THREE.Fog('${g.fundo}',70,260);const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,600),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;document.body.prepend(renderer.domElement);scene.add(new THREE.HemisphereLight(0xbfe8ff,0x243018,1.5));const sun=new THREE.DirectionalLight(0xffffff,1.3);sun.position.set(40,80,20);sun.castShadow=true;scene.add(sun);const ground=new THREE.Mesh(new THREE.PlaneGeometry(420,420,30,30),new THREE.MeshStandardMaterial({color:'${categoria==='aventura'?'#287a46':'#334155'}',roughness:.9}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);const player=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,2.8,12),new THREE.MeshStandardMaterial({color:'${g.cor}',emissive:'${g.cor}',emissiveIntensity:.25}));player.position.y=1.5;player.castShadow=true;scene.add(player);const crystals=[],enemies=[],towers=[],K={};let score=0,lives=5,dash=0,inv=0,run=true,last=performance.now();function rnd(){return Math.random()*360-180}function crystal(){let m=new THREE.Mesh(new THREE.OctahedronGeometry(.65),new THREE.MeshStandardMaterial({color:0xffe45c,emissive:0xffb000,emissiveIntensity:.6}));m.position.set(rnd(),1,rnd());scene.add(m);crystals.push(m)}for(let i=0;i<38;i++)crystal();for(let i=0;i<55;i++){let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,3),new THREE.MeshStandardMaterial({color:0x5c3b20})),top=new THREE.Mesh(new THREE.ConeGeometry(2,5,8),new THREE.MeshStandardMaterial({color:0x167447}));trunk.position.set(rnd(),1.5,rnd());top.position.set(trunk.position.x,5,trunk.position.z);scene.add(trunk,top)}for(let i=0;i<18;i++){let e=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshStandardMaterial({color:0xef4444,emissive:0x660000}));e.position.set(rnd(),1,rnd());scene.add(e);enemies.push(e)}for(let i=0;i<3;i++){let q=new THREE.Group(),base=new THREE.Mesh(new THREE.CylinderGeometry(2.2,3,8,8),new THREE.MeshStandardMaterial({color:0x64748b})),orb=new THREE.Mesh(new THREE.SphereGeometry(1.4),new THREE.MeshStandardMaterial({color:0x475569,emissive:0x000000}));orb.position.y=5;q.add(base,orb);q.position.set(rnd(),4,rnd());q.userData={on:false,orb};scene.add(q);towers.push(q)}onkeydown=e=>{K[e.key]=1;if(e.code==='Space')dash=1};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#action').onpointerdown=()=>dash=1;onresize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)};function dist(a,b){return a.position.distanceTo(b.position)}function finish(ok){run=false;endTitle.textContent=ok?'3D World Complete!':'Adventure Over';endText.textContent='Crystals: '+score;done.style.display='grid'}function loop(t){requestAnimationFrame(loop);let d=Math.min(.033,(t-last)/1000);last=t;if(run){dash=Math.max(0,dash-d);inv=Math.max(0,inv-d);let dx=(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),dz=(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0),len=Math.hypot(dx,dz)||1,v=dash>0?72:24;player.position.x=THREE.MathUtils.clamp(player.position.x+dx/len*v*d,-202,202);player.position.z=THREE.MathUtils.clamp(player.position.z+dz/len*v*d,-202,202);if(dx||dz)player.rotation.y=Math.atan2(dx,dz);crystals.forEach(c=>{c.rotation.y+=d*2;c.position.y=1.2+Math.sin(t*.003+c.position.x)*.35});for(let i=crystals.length-1;i>=0;i--)if(dist(player,crystals[i])<2){scene.remove(crystals[i]);crystals.splice(i,1);score++}enemies.forEach(e=>{let dir=new THREE.Vector3().subVectors(player.position,e.position).setY(0).normalize();e.position.addScaledVector(dir,(3+score*.05)*d);if(dist(player,e)<2&&inv<=0){lives--;inv=1.5;if(lives<=0)finish(false)}});towers.forEach(q=>{if(dist(player,q)<5&&!q.userData.on){q.userData.on=true;q.userData.orb.material.color.set('${g.cor}');q.userData.orb.material.emissive.set('${g.cor}')}});if(score>=15&&towers.every(q=>q.userData.on))finish(true);scoreEl.textContent=score;livesEl.textContent=lives}let target=new THREE.Vector3(player.position.x,player.position.y+9,player.position.z+16);camera.position.lerp(target,.08);camera.lookAt(player.position.x,player.position.y+1,player.position.z);renderer.render(scene,camera)}const scoreEl=document.querySelector('#score'),livesEl=document.querySelector('#lives'),done=document.querySelector('#done'),endTitle=document.querySelector('#endTitle'),endText=document.querySelector('#endText');loop(performance.now());<\/script></body></html>`;
         }
 
         function gerarAventuraMundoAberto(specs, g, variante) {
@@ -977,7 +1038,8 @@ const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crysta
             let div = document.createElement("div");
             div.className = "message " + (s === "Você" ? "user" : "ai");
             if(id) div.id = id;
-            div.innerHTML = `<b>${s}</b><br><span class="msg-content">${t}</span>`;
+            const displayName = s === "Você" ? tr("you") : s;
+            div.innerHTML = `<b>${displayName}</b><br><span class="msg-content">${t}</span>`;
             messages.appendChild(div);
             messages.scrollTop = messages.scrollHeight;
             return div;
@@ -996,7 +1058,7 @@ const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crysta
             if (currentAiMode === 'canvas') {
                 const pedidoJogo = detectarPedidoJogo(text);
                 const loadingDiv = add("GreenAI", `
-                    <div style="font-weight:bold; margin-bottom:10px;">${pedidoJogo ? 'Compilando jogo HTML jogável...' : 'Criando site moderno e responsivo...'}</div>
+                    <div style="font-weight:bold; margin-bottom:10px;">${pedidoJogo ? tr('compilingGame') : tr('creatingSite')}</div>
                     <progress id="prog-${msgId}" value="0" max="100"></progress>
                 `, msgId);
 
@@ -1014,7 +1076,7 @@ const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crysta
                         const siteId = 'site_' + Date.now();
                         window.sitesGeradosMemoria[siteId] = htmlCompleto;
                         
-                        const respostaExata = `Eu já terminei ${pedidoJogo ? 'o seu jogo' : 'o seu site'}!<br><br><button class="button" onclick="abrirPreviewSalvo('${siteId}', '${specs.assunto}')">${pedidoJogo ? 'Jogar Agora' : 'Visualizar Site'}</button> <button class="button" onclick="copiarCodigoGerado('${siteId}', this)">Copiar Código</button>`;
+                        const respostaExata = `${pedidoJogo ? tr('gameReady') : tr('siteReady')}<br><br><button class="button" onclick="abrirPreviewSalvo('${siteId}', '${specs.assunto}')">${pedidoJogo ? tr('playNow') : tr('viewSite')}</button> <button class="button" onclick="copiarCodigoGerado('${siteId}', this)">${tr('copyCode')}</button>`;
                         
                         loadingDiv.querySelector('.msg-content').innerHTML = respostaExata;
                         save("GreenAI", respostaExata);
@@ -1023,9 +1085,9 @@ const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crysta
                 }, 300);
             } 
             else {
-                let loadingText = "Processando lógicas... ⏳";
-                if (currentAiMode === 'imagens') loadingText = "Acionando renderização visual nas APIs... ⏳🎨";
-                if (currentAiMode.includes('natural')) loadingText = "Analisando variáveis da mensagem... 🧠⏳";
+                let loadingText = tr("processing");
+                if (currentAiMode === 'imagens') loadingText = tr("rendering");
+                if (currentAiMode.includes('natural')) loadingText = tr("analyzing");
                 
                 const loadingDiv = add("GreenAI", loadingText, msgId);
 
@@ -1093,6 +1155,7 @@ const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crysta
 
         // ================= INICIALIZAÇÃO =================
         try {
+            setLanguage(currentLanguage);
             const savedTheme = localStorage.getItem("greenai_theme");
             if (savedTheme) {
                 setTheme(savedTheme);
