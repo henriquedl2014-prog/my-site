@@ -1,0 +1,1171 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenAI - Matrix Cinema and Supplies | v5</title>
+
+    <style>
+        :root {
+            --bg1: #021b12;
+            --bg2: #064e3b;
+            --bg3: #16a34a;
+            --accent: #34d399;
+            --cinema-red: #e50914;
+            --cinema-red-hover: #b80710;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, var(--bg1), var(--bg2), var(--bg3));
+            color: white;
+            display: flex;
+            overflow: hidden;
+            transition: transform 0.1s ease;
+        }
+
+        body.shake {
+            animation: tremorViolento 1.2s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes tremorViolento {
+            0% { transform: translate(0, 0); filter: brightness(1) contrast(1); }
+            10% { transform: translate(-15px, 12px) rotate(-1deg); filter: brightness(4) contrast(1.5); }
+            20% { transform: translate(15px, -12px) rotate(1deg); }
+            30% { transform: translate(-10px, -8px) rotate(-0.5deg); filter: brightness(2); }
+            40% { transform: translate(10px, 8px) rotate(0.5deg); }
+            50% { transform: translate(-6px, 5px); filter: brightness(1.5); }
+            60% { transform: translate(6px, -5px); }
+            70% { transform: translate(-3px, -2px); }
+            80% { transform: translate(3px, 2px); filter: brightness(1.1); }
+            90% { transform: translate(-1px, 1px); }
+            100% { transform: translate(0, 0); filter: brightness(1) contrast(1); }
+        }
+
+        /* ================= MENU PRINCIPAL ================= */
+        .welcomeScreen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle, #052015 20%, #010a06 100%);
+            z-index: 100000; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 30px; text-align: center; transition: all 0.6s ease;
+        }
+        .welcomeScreen.fade-out { transform: translateY(-100vh) scale(0.9); opacity: 0; pointer-events: none !important; display: none !important; }
+        .welcomeTitle { font-size: 54px; font-weight: 900; color: var(--accent); text-shadow: 0 0 25px rgba(52, 211, 153, 0.6); margin-bottom: 15px; }
+        .welcomeDesc { font-size: 18px; max-width: 650px; color: #a7f3d0; line-height: 1.6; margin-bottom: 35px; }
+        .aiImageGrid { display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
+        .aiImageContainer { width: 160px; height: 160px; border: 2px solid var(--accent); border-radius: 20px; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; font-size: 50px; box-shadow: 0 10px 20px rgba(0,0,0,0.4); }
+        .btnStart { padding: 18px 45px; font-size: 20px; font-weight: bold; color: #010a06; background: linear-gradient(135deg, #34d399, #10b981); border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 0 20px rgba(52, 211, 153, 0.4); }
+
+        /* ================= ESTRUTURA DO CHAT ================= */
+        .appShell { display: flex; width: 100%; height: 100vh; }
+        .sidebar { width: 300px; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(15px); padding: 20px; overflow-y: auto; border-right: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; gap: 15px; }
+        .logo { font-size: 32px; font-weight: bold; text-align: center; text-shadow: 0 0 10px var(--accent); }
+        .button { width: 100%; padding: 12px; border: none; border-radius: 12px; background: var(--accent); color: black; font-weight: bold; cursor: pointer; transition: all 0.2s ease; }
+        .button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(58, 238, 172, 0.4); }
+        .button.tube { background: linear-gradient(135deg, var(--bg3), var(--accent)); color: black; box-shadow: 0 0 14px var(--accent); }
+        .button.tube:hover { box-shadow: 0 5px 18px var(--accent); }
+        .button.small { padding: 8px; font-size: 12px; background: rgba(255, 255, 255, 0.15); color: white; margin-top: 5px; width: auto; min-width: 120px; }
+        .theme-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .language-select { width:100%; padding:11px 12px; border:1px solid var(--accent); border-radius:12px; background:rgba(0,0,0,.45); color:white; font-weight:bold; outline:none; cursor:pointer; }
+        .language-select option { background:#111; color:white; }
+        .chat-list { flex: 1; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+        .chat-item { background: rgba(255, 255, 255, 0.08); padding: 12px; border-radius: 10px; cursor: pointer; border-left: 3px solid transparent; }
+        .chat-item:hover { background: rgba(255, 255, 255, 0.15); border-left-color: var(--accent); }
+        
+        .main { flex: 1; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.15); }
+        .topbar { height: 70px; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .messages { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; }
+        .message { padding: 16px; border-radius: 16px; max-width: 85%; line-height: 1.6; animation: fadeIn 0.3s ease; white-space: pre-wrap; font-size: 15px; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .user { background: var(--accent); color: black; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(5px); align-self: flex-start; border-bottom-left-radius: 2px; }
+        
+        /* NOVO SELETOR DE MODOS */
+        .mode-selector-area { padding: 15px 20px; background: rgba(0, 0, 0, 0.4); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .mode-tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .mode-tab-btn { flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.2s; }
+        .mode-tab-btn.active { background: var(--accent); color: black; box-shadow: 0 0 15px rgba(52, 211, 153, 0.4); }
+        .mode-panel { display: none; gap: 10px; flex-wrap: wrap; animation: fadeIn 0.3s; }
+        .mode-panel.active { display: flex; }
+        .mode-opt-btn { flex: 1; min-width: 200px; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; cursor: pointer; transition: 0.2s; text-align: center; font-size: 13px; }
+        .mode-opt-btn:hover { border-color: var(--accent); }
+        .mode-opt-btn.active { background: var(--accent); color: black; font-weight: bold; border-color: var(--accent); }
+
+        .input-area { display: flex; padding: 20px; gap: 12px; background: rgba(0, 0, 0, 0.3); align-items: center; border-top: 1px solid rgba(255,255,255,0.05); }
+        input { flex: 1; padding: 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; background: rgba(0, 0, 0, 0.4); color: white; font-size: 16px; outline: none; }
+        input:focus { border-color: var(--accent); }
+
+        /* PAINEIS EXTRAS */
+        .wikiPanel { width: 380px; background: rgba(10, 15, 25, 0.95); border-left: 1px solid rgba(255, 255, 255, 0.1); display: flex; flex-direction: column; }
+        .wikiPanel.hidden { display: none !important; }
+        .wikiHeader { padding: 14px; font-weight: bold; border-bottom: 1px solid rgba(255, 255, 255, 0.1); background: rgba(0, 0, 0, 0.35); display: flex; justify-content: space-between; }
+        .wikiFrame { flex: 1; width: 100%; border: 0; background: white; }
+        
+        .sitePreviewOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 50000; display: none; flex-direction: column; padding: 20px; backdrop-filter: blur(8px); }
+        .sitePreviewHeader { display: flex; justify-content: space-between; background: #111827; padding: 12px 20px; border-radius: 12px 12px 0 0; color: white; }
+        .sitePreviewFrame { flex: 1; width: 100%; border: 1px solid #374151; background: white; border-radius: 0 0 12px 12px; }
+        .codeEditorOverlay { position:fixed; inset:0; z-index:60000; display:none; flex-direction:column; gap:12px; padding:24px; background:#050914f2; }
+        .codeEditorOverlay textarea { flex:1; resize:none; padding:16px; border:1px solid #34d399; border-radius:12px; background:#08111d; color:#d1fae5; font:14px/1.5 Consolas,monospace; }
+
+        .voicePanel { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(5, 20, 15, 0.98); border: 2px solid var(--accent); padding: 25px; border-radius: 24px; display: none; flex-direction: column; align-items: center; gap: 15px; width: min(92vw, 500px); max-height: 80vh; overflow-y: auto; z-index: 999; }
+        .orb { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--bg3), var(--accent)); box-shadow: 0 0 15px rgba(58, 238, 172, 0.3); }
+        .orb.speaking { animation: pulse 1.2s infinite; }
+        
+        /* ESTÚDIO VISUAL */
+        .imageGridResult { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .img-wrapper { position: relative; width: 100%; aspect-ratio: 1/1; border-radius: 10px; border: 2px solid var(--accent); overflow: hidden; background: rgba(0,0,0,0.5); }
+        .img-loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--accent); font-weight: bold; z-index: 1; }
+        .img-loader .spinner { width: 30px; height: 30px; border: 3px solid rgba(52,211,153,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        .img-wrapper img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; cursor: pointer; transition: transform 0.2s, opacity 0.5s; opacity: 0; z-index: 2; }
+        .img-wrapper img:hover { transform: scale(1.05); }
+        .imageModalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 60000; display: none; justify-content: center; align-items: center; flex-direction: column; padding: 20px; }
+        .imageModalOverlay img { max-width: 90vw; max-height: 85vh; border-radius: 12px; border: 3px solid var(--accent); }
+
+        /* PROGRESS BAR CUSTOM */
+        progress { width: 100%; height: 25px; border-radius: 10px; overflow: hidden; -webkit-appearance: none; appearance: none; margin-top: 10px; }
+        progress::-webkit-progress-bar { background-color: rgba(0,0,0,0.5); border-radius: 10px; }
+        progress::-webkit-progress-value { background: linear-gradient(90deg, #16a34a, #34d399); border-radius: 10px; transition: width 0.3s; }
+        
+        /* OTHERS */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .tubeOverlay { display: none; position: fixed; inset:0; background: #000; z-index: 9999; justify-content: center; align-items: center; }
+        .tubePanel { background: #000; border: 2px solid var(--cinema-red); padding: 30px; border-radius: 24px; width: min(94vw, 850px); max-height: 90vh; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .activePlayerSection { width: 100%; background: #000; position: relative; padding-bottom: 56.25%; display: none; }
+        .activePlayerSection iframe { position: absolute; inset:0; width:100%; height:100%; border:none; }
+    </style>
+</head>
+
+<body>
+
+    <div class="welcomeScreen" id="welcomeScreen">
+        <h1 class="welcomeTitle">GreenAI Matrix</h1>
+        <p class="welcomeDesc" data-i18n="welcomeDesc">Assistente ultra-convincente, focada e projetada com alto teor de dados lógicos... 💚</p>
+        <button class="btnStart" id="startBtn" data-i18n="start">Iniciar Conexão Suprema</button>
+    </div>
+
+    <div class="appShell">
+        <div class="sidebar">
+            <div class="logo">GreenAI 💚</div>
+            <button class="button" onclick="newChat()" data-i18n="newChat">+ Novo Chat</button>
+            <button class="button" onclick="openVoice()" data-i18n="voiceMode">🎤 Modo de Voz</button>
+            <button class="button tube" onclick="triggerRedCine()" data-i18n="redCine">📺 RedCine</button>
+            <button class="button" onclick="toggleWiki()" data-i18n="webPanel">🌐 Alternar Painel Web</button>
+            <div class="theme-grid">
+                <button class="button" style="background:#16a34a;" onclick="setTheme('green')"></button>
+                <button class="button" style="background:#2563eb;" onclick="setTheme('blue')"></button>
+                <button class="button" style="background:#9333ea;" onclick="setTheme('purple')"></button>
+                <button class="button" style="background:#ec4899;" onclick="setTheme('pink')"></button>
+                <button class="button" style="background:#ff0000;" onclick="setTheme('red')"></button>
+            </div>
+            <select id="languageSelect" class="language-select" onchange="setLanguage(this.value)" aria-label="Language">
+                <option value="pt">🇧🇷 Português</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="it">🇮🇹 Italiano</option>
+            </select>
+            <button class="button small" onclick="exportarBackup()" data-i18n="exportBackup">💾 Exportar Backup</button>
+            <input type="file" id="arquivoImport" accept=".json" style="display:none" onchange="importarBackup(event)">
+            <button class="button small" onclick="document.getElementById('arquivoImport').click()" data-i18n="importBackup">📂 Importar</button>
+            <div class="chat-list" id="chatList"></div>
+        </div>
+
+        <div class="main">
+            <div class="topbar"><h2 id="chatTitle">GreenAI Principal</h2></div>
+            
+            <!-- SELETOR DE MODOS (Classic / Advanced) -->
+            <div class="mode-selector-area">
+                <div class="mode-tabs">
+                    <button class="mode-tab-btn active" id="btn-tab-classic" onclick="openPanel('classic')" data-i18n="classicMode">Classic Mode</button>
+                    <button class="mode-tab-btn" id="btn-tab-advanced" onclick="openPanel('advanced')" data-i18n="advancedMode">Advanced Mode</button>
+                </div>
+                
+                <div id="panel-classic" class="mode-panel active">
+                    <button class="mode-opt-btn active" onclick="selectAiMode('natural_4.8', this)" data-i18n="natural48">Natural AI para GreenAI 4.8</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('estudos', this)" data-i18n="studyMode">Modo de Estudos</button>
+                </div>
+                
+                <div id="panel-advanced" class="mode-panel">
+                    <button class="mode-opt-btn" onclick="selectAiMode('natural_4.9', this)" data-i18n="natural49">Natural AI para GreenAI 4.9</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('estudos_aprofundados', this)" data-i18n="deepStudy">Modo de Estudos Aprofundados</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('imagens', this)" data-i18n="imagesVideos">Imagens & Vídeos 1.2</button>
+                    <button class="mode-opt-btn" onclick="selectAiMode('canvas', this)" data-i18n="sitesGames">Sites & Games 2.0</button>
+                </div>
+            </div>
+
+            <div class="messages" id="messages"></div>
+            
+            <div class="input-area">
+                <input id="input" placeholder="Digite o que deseja pesquisar, gerar ou criar..." data-i18n-placeholder="prompt">
+                <button class="button" style="width:120px;" onclick="handleSendButton()" data-i18n="send">Enviar</button>
+            </div>
+        </div>
+
+        <div class="wikiPanel hidden" id="wikiPanel">
+            <div class="wikiHeader"><span data-i18n="browser">Navegador</span><button onclick="toggleWiki(false)" style="background:none; border:none; color:white; cursor:pointer;">❌</button></div>
+            <iframe class="wikiFrame" id="wikiFrame" src="about:blank"></iframe>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div class="imageModalOverlay" id="imageModalOverlay">
+        <img id="enlargedImage" src="" alt="Imagem Ampliada">
+        <button class="closeModalBtn" onclick="fecharImagemModal()" style="margin-top: 20px; padding: 10px 30px; background: #ef4444; border:none; border-radius:8px; color:white; font-weight:bold; cursor:pointer;">❌ Fechar</button>
+    </div>
+    
+    <div class="sitePreviewOverlay" id="sitePreviewOverlay">
+        <div class="sitePreviewHeader">
+            <span id="sitePreviewTitle" style="font-weight:bold;">🌐 GreenAI Site Engine</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button class="button small" onclick="editarProjetoAtual()">✏️ Editar detalhes</button>
+                <button class="button small" onclick="baixarProjetoAtual()">⬇️ Baixar</button>
+                <button class="button small" onclick="publicarProjetoAtual(this)">🌍 Publicar</button>
+                <button class="button small" style="background:#34d399; color:black;" onclick="abrirSiteEmNovaAba()">🚀 Abrir em Nova Aba</button>
+                <button class="button small" style="background:#ef4444; color:white;" onclick="fecharPreviewSite()">❌ Fechar</button>
+            </div>
+        </div>
+        <iframe class="sitePreviewFrame" id="sitePreviewFrame"></iframe>
+    </div>
+
+    <div class="codeEditorOverlay" id="codeEditorOverlay">
+        <div style="display:flex;align-items:center;justify-content:space-between;color:white;"><b>Editar código e detalhes</b><span>HTML, CSS e JavaScript</span></div>
+        <textarea id="projectCodeEditor" spellcheck="false"></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;"><button class="button" onclick="fecharEditorProjeto()">Cancelar</button><button class="button" style="background:#34d399;color:#052e16" onclick="salvarEdicaoProjeto()">Salvar alterações</button></div>
+    </div>
+
+    <div class="voicePanel" id="voicePanel">
+        <div class="orb" id="orb"></div>
+        <button class="button" style="background:#ff4a4a; color:white; margin-top:20px;" onclick="closeVoice()">Fechar</button>
+    </div>
+
+    <div class="tubeOverlay" id="tubeOverlay">
+        <div class="tubePanel">
+            <button onclick="closeRedCineWithExplosion()" style="padding:10px; background:var(--cinema-red); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">❌ Fechar Terminal</button>
+            <div class="activePlayerSection" id="activePlayerSection">
+                <!-- IFRAME COM PERMISSÕES CORRIGIDAS -->
+                <iframe id="tubePlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            </div>
+            <div id="videoGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px; margin-top:15px;"></div>
+        </div>
+    </div>
+
+    <script>
+        // ================= DOM & VARIÁVEIS GLOBAIS =================
+        const welcomeScreen = document.getElementById("welcomeScreen");
+        const btnStart = document.getElementById("startBtn");
+        const messages = document.getElementById("messages");
+        const input = document.getElementById("input");
+        const chatList = document.getElementById("chatList");
+
+        const I18N = {
+            pt: {
+                welcomeDesc:"Assistente ultra-convincente, focada e projetada com alto teor de dados lógicos... 💚", start:"Iniciar Conexão Suprema",
+                newChat:"+ Novo Chat", voiceMode:"🎤 Modo de Voz", redCine:"📺 RedCine", webPanel:"🌐 Alternar Painel Web",
+                exportBackup:"💾 Exportar Backup", importBackup:"📂 Importar", classicMode:"Modo Clássico", advancedMode:"Modo Avançado",
+                natural48:"IA Natural para GreenAI 4.8", studyMode:"Modo de Estudos", natural49:"IA Natural para GreenAI 4.9",
+                deepStudy:"Modo de Estudos Aprofundados", imagesVideos:"Imagens & Vídeos 1.2", sitesGames:"Sites & Jogos 2.0", prompt:"Digite o que deseja pesquisar, gerar ou criar...",
+                send:"Enviar", browser:"Navegador", you:"Você", processing:"Processando lógicas... ⏳", analyzing:"Analisando variáveis da mensagem... 🧠⏳",
+                rendering:"Acionando renderização visual nas APIs... ⏳🎨", compilingGame:"Compilando jogo HTML jogável...", creatingSite:"Criando site moderno e responsivo...",
+                gameReady:"Eu já terminei o seu jogo!", siteReady:"Eu já terminei o seu site!", playNow:"Jogar Agora", viewSite:"Visualizar Site", copyCode:"Copiar Código"
+            },
+            en: {
+                welcomeDesc:"A focused, highly convincing assistant designed with powerful logical data... 💚", start:"Start Supreme Connection",
+                newChat:"+ New Chat", voiceMode:"🎤 Voice Mode", redCine:"📺 RedCine", webPanel:"🌐 Toggle Web Panel",
+                exportBackup:"💾 Export Backup", importBackup:"📂 Import", classicMode:"Classic Mode", advancedMode:"Advanced Mode",
+                natural48:"Natural AI for GreenAI 4.8", studyMode:"Study Mode", natural49:"Natural AI for GreenAI 4.9",
+                deepStudy:"Advanced Study Mode", imagesVideos:"Images & Videos 1.2", sitesGames:"Sites & Games 2.0", prompt:"Type what you want to search, generate, or create...",
+                send:"Send", browser:"Browser", you:"You", processing:"Processing logic... ⏳", analyzing:"Analyzing message variables... 🧠⏳",
+                rendering:"Starting visual rendering APIs... ⏳🎨", compilingGame:"Compiling playable HTML game...", creatingSite:"Creating a modern responsive website...",
+                gameReady:"Your game is ready!", siteReady:"Your website is ready!", playNow:"Play Now", viewSite:"View Website", copyCode:"Copy Code"
+            },
+            it: {
+                welcomeDesc:"Un'assistente convincente e precisa, progettata con potenti dati logici... 💚", start:"Avvia Connessione Suprema",
+                newChat:"+ Nuova Chat", voiceMode:"🎤 Modalità Voce", redCine:"📺 RedCine", webPanel:"🌐 Mostra/Nascondi Pannello Web",
+                exportBackup:"💾 Esporta Backup", importBackup:"📂 Importa", classicMode:"Modalità Classica", advancedMode:"Modalità Avanzata",
+                natural48:"IA Naturale per GreenAI 4.8", studyMode:"Modalità Studio", natural49:"IA Naturale per GreenAI 4.9",
+                deepStudy:"Modalità Studio Avanzato", imagesVideos:"Immagini e Video 1.2", sitesGames:"Siti e Giochi 2.0", prompt:"Scrivi cosa vuoi cercare, generare o creare...",
+                send:"Invia", browser:"Browser", you:"Tu", processing:"Elaborazione logica... ⏳", analyzing:"Analisi delle variabili del messaggio... 🧠⏳",
+                rendering:"Avvio del rendering visivo... ⏳🎨", compilingGame:"Compilazione del gioco HTML...", creatingSite:"Creazione di un sito moderno e responsive...",
+                gameReady:"Il tuo gioco è pronto!", siteReady:"Il tuo sito è pronto!", playNow:"Gioca Ora", viewSite:"Visualizza Sito", copyCode:"Copia Codice"
+            }
+        };
+        let currentLanguage = localStorage.getItem("greenai_language") || "pt";
+        function tr(key) { return (I18N[currentLanguage] && I18N[currentLanguage][key]) || I18N.pt[key] || key; }
+        function setLanguage(lang) {
+            if (!I18N[lang]) return;
+            currentLanguage = lang;
+            localStorage.setItem("greenai_language", lang);
+            document.documentElement.lang = lang === "pt" ? "pt-BR" : lang;
+            document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = tr(el.dataset.i18n));
+            document.querySelectorAll("[data-i18n-placeholder]").forEach(el => el.placeholder = tr(el.dataset.i18nPlaceholder));
+            const selector = document.getElementById("languageSelect");
+            if (selector) selector.value = lang;
+            if (typeof loadMessages === "function") loadMessages();
+        }
+        
+        let currentAiMode = "natural_4.8"; // Modo Padrão
+        window.sitesGeradosMemoria = {};
+        let templateBag = Array.from({length: 20}, (_, i) => i); 
+        let currentChat = localStorage.getItem("greenai_chat") || "Principal";
+        const CHAVES_RESERVADAS = ["greenai_chat", "greenai_voice_name", "greenai_voice_uri", "greenai_theme", "greenai_estilo", "greenai_language"];
+        let ultimoHtmlGerado = "";
+        let projetoAtualId = "";
+
+// LISTA DE VÍDEOS COM YOUTUBE-NOCOOKIE (31 VÍDEOS)
+        const LISTA_VIDEOS = [
+            { id: 'v1', titulo: 'N30 Arctrux - Lunar', url: 'https://www.youtube-nocookie.com/embed/i-TG75nnONM' },
+            { id: 'v2', titulo: 'N30-Arctrux - Night Calls', url: 'https://www.youtube-nocookie.com/embed/nSPeOM0FyWk' },
+            { id: 'v3', titulo: 'N30-Arctrux - Failed', url: 'https://www.youtube-nocookie.com/embed/ykLBAGvoYCg' },
+            { id: 'v4', titulo: 'Paradox Space: Imaginary Friends 100%', url: 'https://www.youtube-nocookie.com/embed/GFe5FUlOBms' },
+            { id: 'v5', titulo: 'Zytho - Berzerker 100%', url: 'https://www.youtube-nocookie.com/embed/xdBKXlWF7hg' },
+            { id: 'v6', titulo: 'Quasar Rebound | Versace 100%', url: 'https://www.youtube-nocookie.com/embed/lkRxhn-hxHY' },
+            { id: 'v7', titulo: 'World 0 - Gamma world', url: 'https://www.youtube-nocookie.com/embed/yCI1sGyn0O4' },
+            { id: 'v8', titulo: 'Lets make a game because why not? | Tracklist 1 devlog #1', url: 'https://www.youtube-nocookie.com/embed/nJ15f6_vBDQ' },
+            { id: 'v9', titulo: 'PSCE: This world is beautiful 100%', url: 'https://www.youtube-nocookie.com/embed/Fq7RAfYlB54' },
+            { id: 'v10', titulo: '(Verified) Secret Caves by OperationRG 100%', url: 'https://www.youtube-nocookie.com/embed/sL8FNt8ltN8' },
+            { id: 'v11', titulo: 'Isagi by OperationRG', url: 'https://www.youtube-nocookie.com/embed/Q4Ohxk2l8ig' },
+            { id: 'v12', titulo: 'Paradox Space: Alone 100%', url: 'https://www.youtube-nocookie.com/embed/KFCykJjY-ds' },
+            { id: 'v13', titulo: 'Paradox Space: Time Leap 100%', url: 'https://www.youtube-nocookie.com/embed/4jOthkl2n6k' },
+            { id: 'v14', titulo: 'Paradox Space: Last Summer 100%', url: 'https://www.youtube-nocookie.com/embed/VmEy-kIQrsY' },
+            { id: 'v15', titulo: 'Quasar | Dancefloor 100%', url: 'https://www.youtube-nocookie.com/embed/PcvVUHZkVqc' },
+            { id: 'v16', titulo: 'Alt Quasar | Sky high 100%', url: 'https://www.youtube-nocookie.com/embed/MAapkCBd0LU' },
+            { id: 'v17', titulo: 'Photon gameplay demo', url: 'https://www.youtube-nocookie.com/embed/Sj26IJsqzgY' },
+            { id: 'v18', titulo: '(Current world record) Servers 100% in 1:30 No Coins', url: 'https://www.youtube-nocookie.com/embed/QnaMpSQeYDQ' },
+            { id: 'v19', titulo: 'Eternal Fall gameplay demo', url: 'https://www.youtube-nocookie.com/embed/CQC36OTMqu4' },
+            { id: 'v20', titulo: 'Collapse gameplay demo', url: 'https://www.youtube-nocookie.com/embed/WWgaH4CwjDs' },
+            { id: 'v21', titulo: 'Color Dash - Power Up 100%', url: 'https://www.youtube-nocookie.com/embed/sWUdSkXV2Kw' },
+            { id: 'v22', titulo: 'N30-Arctrux - Logon | House', url: 'https://www.youtube-nocookie.com/embed/Ep1ppbKglsg' },
+            { id: 'v23', titulo: 'N30-Arctrux - Heaven Sound', url: 'https://www.youtube-nocookie.com/embed/E_CO5bUl3K4' },
+            { id: 'v24', titulo: 'N30-Arctrux - Night Calls', url: 'https://www.youtube-nocookie.com/embed/nSPeOM0FyWk' },
+            { id: 'v25', titulo: '[Trap] N30-Arctrux - Existence', url: 'https://www.youtube-nocookie.com/embed/eEY33PF7tu4' },
+            { id: 'v26', titulo: 'N30-Arctrux - Rainy Summer', url: 'https://www.youtube-nocookie.com/embed/HBjAzreGk8E' },
+            { id: 'v27', titulo: 'N30 Arctrux - Attack (EP)', url: 'https://www.youtube-nocookie.com/embed/_pEQyMuS6Mk' },
+            { id: 'v28', titulo: 'N30 Arctrux - Lunar', url: 'https://www.youtube-nocookie.com/embed/i-TG75nnONM' },
+            { id: 'v29', titulo: 'N30-Arctrux - Failed', url: 'https://www.youtube-nocookie.com/embed/ykLBAGvoYCg' },
+            { id: 'v30', titulo: 'N30-Arctrux - I\'m trying', url: 'https://www.youtube-nocookie.com/embed/wPMUlzpn5YE' },
+            { id: 'v31', titulo: 'Paradox Space Fanmade: Sky High 100%', url: 'https://www.youtube-nocookie.com/embed/u-um4QE3TIs?si=9HvYnzA2jAdOgOEr' }
+        ];
+
+        // ================= REDCINE =================
+        function montarUrlVideo(url) {
+            const separador = url.includes('?') ? '&' : '?';
+            return `${url}${separador}autoplay=1&playsinline=1&rel=0&modestbranding=1`;
+        }
+
+        function obterUrlExterna(embedUrl) {
+            const match = embedUrl.match(/\/embed\/([^?&]+)/);
+            return match ? `https://www.youtube.com/watch?v=${match[1]}` : embedUrl;
+        }
+
+        function reproduzirRedCine(video) {
+            const playerSection = document.getElementById("activePlayerSection");
+            const src = montarUrlVideo(video.url);
+            const externa = obterUrlExterna(video.url);
+            playerSection.innerHTML = `
+                <iframe id="tubePlayer"
+                    src="${src}"
+                    title="${video.titulo.replace(/"/g, '&quot;')}"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                    allowfullscreen></iframe>
+                <a href="${externa}" target="_blank" rel="noopener noreferrer"
+                   style="position:absolute; right:10px; bottom:10px; z-index:5; background:#e50914; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                   Abrir no YouTube
+                </a>`;
+            playerSection.style.display = "block";
+            playerSection.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+
+        function closeRedCineWithExplosion() {
+            const playerSection = document.getElementById("activePlayerSection");
+            playerSection.innerHTML = "";
+            playerSection.style.display = "none";
+            document.getElementById("tubeOverlay").style.display = "none";
+        }
+
+        function triggerRedCine() { 
+            document.getElementById("tubeOverlay").style.display = "flex";
+            const grid = document.getElementById("videoGrid");
+            const playerSection = document.getElementById("activePlayerSection");
+            grid.innerHTML = "";
+            
+            LISTA_VIDEOS.forEach(v => {
+                let div = document.createElement("div");
+                div.style = "background:#111; border:1px solid var(--cinema-red); padding:10px; border-radius:8px; cursor:pointer;";
+                div.onclick = () => reproduzirRedCine(v);
+                div.innerHTML = `<div style="font-size:24px; text-align:center; margin-bottom:5px;">🎬</div><div style="font-size:12px; font-weight:bold; color:#fff;">${v.titulo}</div>`;
+                grid.appendChild(div);
+            });
+        }
+
+        // INICIALIZAÇÃO E UI
+        if (btnStart) {
+            btnStart.addEventListener("click", () => {
+                welcomeScreen.classList.add("fade-out");
+                setTimeout(() => welcomeScreen.style.display = "none", 500);
+            });
+        }
+
+        function openPanel(panel) {
+            document.getElementById('panel-classic').classList.remove('active');
+            document.getElementById('panel-advanced').classList.remove('active');
+            document.getElementById('btn-tab-classic').classList.remove('active');
+            document.getElementById('btn-tab-advanced').classList.remove('active');
+            document.getElementById('panel-' + panel).classList.add('active');
+            document.getElementById('btn-tab-' + panel).classList.add('active');
+        }
+
+        function selectAiMode(mode, btn) {
+            currentAiMode = mode;
+            document.querySelectorAll('.mode-opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // ================= IMAGENS =================
+        function ampliarImagem(src) {
+            document.getElementById("enlargedImage").src = src;
+            document.getElementById("imageModalOverlay").style.display = "flex";
+        }
+        function fecharImagemModal() { document.getElementById("imageModalOverlay").style.display = "none"; }
+        window.imgLoaded = function(img) {
+            img.classList.add('loaded');
+            img.style.opacity = 1;
+            if(img.previousElementSibling) img.previousElementSibling.style.display = 'none';
+        };
+
+        // ================= WIKI E SITES =================
+        function toggleWiki(force) { document.getElementById("wikiPanel").classList.toggle('hidden', force === false); }
+        function abrirPaginaWeb(url) { document.getElementById("wikiFrame").src = url; toggleWiki(true); }
+
+        function abrirPreviewSalvo(idSite, titulo) {
+            const code = window.sitesGeradosMemoria[idSite];
+            if(code) {
+                ultimoHtmlGerado = code;
+                projetoAtualId = idSite;
+                document.getElementById("sitePreviewTitle").textContent = `🌐 ${titulo}`;
+                document.getElementById("sitePreviewOverlay").style.display = "flex";
+                const doc = document.getElementById("sitePreviewFrame").contentDocument;
+                doc.open(); doc.write(code); doc.close();
+            } else { alert("Site não encontrado na memória desta sessão."); }
+        }
+
+        async function copiarCodigoGerado(idSite, botao) {
+            const codigo = window.sitesGeradosMemoria[idSite];
+            if (!codigo) return alert("Código não encontrado nesta sessão.");
+            try {
+                await navigator.clipboard.writeText(codigo);
+            } catch (_) {
+                const area = document.createElement('textarea');
+                area.value = codigo; document.body.appendChild(area); area.select();
+                document.execCommand('copy'); area.remove();
+            }
+            const anterior = botao.textContent;
+            botao.textContent = 'Código copiado!';
+            setTimeout(() => botao.textContent = anterior, 1800);
+        }
+        function fecharPreviewSite() { document.getElementById("sitePreviewOverlay").style.display = "none"; }
+        function abrirSiteEmNovaAba() {
+            const blob = new Blob([ultimoHtmlGerado], { type: 'text/html' });
+            window.open(URL.createObjectURL(blob), '_blank');
+        }
+        function editarProjetoAtual() {
+            if (!ultimoHtmlGerado) return;
+            document.getElementById('projectCodeEditor').value = ultimoHtmlGerado;
+            document.getElementById('codeEditorOverlay').style.display = 'flex';
+        }
+        function fecharEditorProjeto() { document.getElementById('codeEditorOverlay').style.display = 'none'; }
+        function salvarEdicaoProjeto() {
+            const codigo = document.getElementById('projectCodeEditor').value;
+            if (!codigo.trim()) return alert('O código não pode ficar vazio.');
+            ultimoHtmlGerado = codigo;
+            if (projetoAtualId) window.sitesGeradosMemoria[projetoAtualId] = codigo;
+            const doc = document.getElementById('sitePreviewFrame').contentDocument;
+            doc.open(); doc.write(codigo); doc.close();
+            fecharEditorProjeto();
+        }
+        function baixarProjetoAtual() {
+            if (!ultimoHtmlGerado) return;
+            const titulo = document.getElementById('sitePreviewTitle').textContent.replace(/[^a-z0-9]+/gi,'_').replace(/^_|_$/g,'') || 'greenai_project';
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([ultimoHtmlGerado], {type:'text/html'}));
+            a.download = titulo + '.html'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+        }
+        async function publicarProjetoAtual(botao) {
+            if (!ultimoHtmlGerado) return;
+            const url = URL.createObjectURL(new Blob([ultimoHtmlGerado], {type:'text/html'}));
+            window.open(url, '_blank');
+            try { await navigator.clipboard.writeText(url); botao.textContent = 'Link da sessão copiado!'; }
+            catch (_) { botao.textContent = 'Publicado nesta sessão!'; }
+            setTimeout(() => botao.textContent = '🌍 Publicar', 2200);
+        }
+
+        // ================= BACKUP & TEMA =================
+        function exportarBackup() {
+            let dados = {};
+            for (let i = 0; i < localStorage.length; i++) { dados[localStorage.key(i)] = localStorage.getItem(localStorage.key(i)); }
+            let blob = new Blob([JSON.stringify(dados)], { type: "application/json" });
+            let a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "greenai_backup.json"; a.click();
+        }
+        function importarBackup(e) {
+            let f = e.target.files[0]; if (!f) return;
+            let r = new FileReader();
+            r.onload = function(evt) {
+                try {
+                    let dados = JSON.parse(evt.target.result);
+                    Object.keys(dados).forEach(k => localStorage.setItem(k, dados[k]));
+                    loadChats(); loadMessages(); alert("Backup importado com sucesso!");
+                } catch(e) { alert("Erro ao importar."); }
+            };
+            r.readAsText(f);
+        }
+        function setTheme(t) {
+            const paletas = {
+                green: ["#021b12", "#064e3b", "#16a34a", "#34d399"],
+                blue: ["#02111b", "#0c4a6e", "#2563eb", "#60a5fa"],
+                purple: ["#1e0033", "#581c87", "#9333ea", "#c084fc"],
+                pink: ["#3b001f", "#9d174d", "#ec4899", "#f9a8d4"],
+                red: ["#070000", "#320000", "#8f0000", "#ff1616"]
+            };
+            if (!paletas[t]) return;
+            document.documentElement.style.setProperty("--bg1", paletas[t][0]);
+            document.documentElement.style.setProperty("--bg2", paletas[t][1]);
+            document.documentElement.style.setProperty("--bg3", paletas[t][2]);
+            document.documentElement.style.setProperty("--accent", paletas[t][3]);
+            localStorage.setItem("greenai_theme", t);
+        }
+
+        // ================= ENGINE CANVAS =================
+        function analisarPrompt(texto) {
+            let t = texto.toLowerCase();
+            let corPri = "#34d399"; let bgColor = "#0f172a";
+            const cores = {'marrom':['#8B4513','#faebd7'],'vermelho':['#ef4444','#fef2f2'],'azul':['#3b82f6','#f0f9ff'],'verde':['#10b981','#f0fdf4'],'roxo':['#a855f7','#faf5ff'],'rosa':['#ec4899','#fdf2f8'],'amarelo':['#eab308','#fefce8'],'preto':['#333333','#111111'],'branco':['#cbd5e1','#ffffff'],'laranja':['#f97316','#fff7ed']};
+            for (let c in cores) if(t.includes(c)) { corPri = cores[c][0]; bgColor = cores[c][1]; break; }
+            let assunto = texto.replace(/(crie|um|site|faça|que|ele|mostre|vários|varios|quero)/gi, '').trim() || texto;
+            return { corPri, bgColor, assunto: assunto.charAt(0).toUpperCase() + assunto.slice(1) };
+        }
+
+        function detectarPedidoJogo(texto) {
+            const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const termos = [
+                'jogo','jogos','game','games','minigame','minigames','fps','shooter','arcade','clicker',
+                'tiro','atirar','arma','inimigo','aventura','acao','luta','arena','sobrevivencia',
+                'corrida','carro','racing','plataforma','pular','puzzle','quebra-cabeca','rpg','simulador','3d','mundo aberto'
+            ];
+            return termos.some(termo => t.includes(termo));
+        }
+
+        function inferirEmoji(a) {
+            let e=""; a=a.toLowerCase();
+            if(a.includes('cocô')||a.includes('merda'))e+='💩'; if(a.includes('passaro')||a.includes('pássaro'))e+='🐦';
+            if(a.includes('gato'))e+='🐱'; if(a.includes('cachorro'))e+='🐶'; if(a.includes('carro'))e+='🚗';
+            return e || '✨';
+        }
+
+        function getNextTemplateId() {
+            if(templateBag.length === 0) templateBag = Array.from({length: 20}, (_, i) => i);
+            return templateBag.splice(Math.floor(Math.random() * templateBag.length), 1)[0];
+        }
+
+        function gerarSiteTemplate(templateId, specs) {
+            const isLight = specs.bgColor.startsWith('#f') || specs.bgColor==='#ffffff';
+            const txt = isLight ? '#111' : '#fff';
+            const cardBg = isLight ? '#fff' : 'rgba(0,0,0,0.4)';
+            const emoji = inferirEmoji(specs.assunto);
+            
+            const radius = (templateId * 2) % 30 + 'px';
+            const navAlign = templateId % 2 === 0 ? 'center' : (templateId % 3 === 0 ? 'flex-start' : 'flex-end');
+            const navBg = templateId % 4 === 0 ? specs.corPri : cardBg;
+            const navTxt = templateId % 4 === 0 ? '#fff' : specs.corPri;
+            const gridCols = templateId % 3 === 0 ? 'repeat(auto-fit, minmax(250px, 1fr))' : 'repeat(auto-fit, minmax(180px, 1fr))';
+            const hasSidebar = templateId >= 15;
+
+            let megaElementos = '';
+            for(let i=1; i<=20; i++) {
+                megaElementos += `<div class="card"><div style="font-size:40px;">${emoji}</div><h3>Item ${i}</h3><p>Detalhes hiper-específicos sobre o elemento ${i} de ${specs.assunto}.</p></div>`;
+            }
+
+            const paginasHTML = `
+                <div id="pg-home" class="page active"><div class="hero"><h1>Bem-vindo ao multiverso de ${specs.assunto}</h1><p>Template ID: #${templateId} gerado dinamicamente com páginas estruturadas.</p></div><div class="grid">${megaElementos}</div></div>
+                <div id="pg-sobre" class="page"><div class="hero"><h1>Sobre ${specs.assunto}</h1><p>Toda a história focada em ${emoji}.</p></div><div class="grid">${megaElementos.slice(0, 500)}</div></div>
+                <div id="pg-produtos" class="page"><h1 style="padding:20px; text-align:center;">Produtos de ${specs.assunto}</h1><div class="grid">${megaElementos}</div></div>
+                <div id="pg-galeria" class="page"><h1 style="padding:20px; text-align:center;">Mega Galeria</h1><div class="grid" style="grid-template-columns: repeat(auto-fit,minmax(120px,1fr));">${megaElementos}</div></div>
+                <div id="pg-contato" class="page"><div class="hero"><h1>Fale Conosco</h1><p>Mande sua mensagem sobre ${specs.assunto}</p></div></div>
+                <div id="pg-faq" class="page"><h1 style="padding:20px; text-align:center;">Dúvidas Frequentes</h1><div class="grid">${megaElementos.slice(0, 800)}</div></div>
+                <div id="pg-equipe" class="page"><h1 style="padding:20px; text-align:center;">Nossa Equipe</h1><div class="grid">${megaElementos.slice(0, 800)}</div></div>
+                <div id="pg-termos" class="page"><h1 style="padding:20px; text-align:center;">Termos de Uso</h1><p style="padding:20px; text-align:center;">Regras de utilização do ${specs.assunto}.</p></div>
+                <div id="pg-blog" class="page"><h1 style="padding:20px; text-align:center;">Blog</h1><div class="grid">${megaElementos}</div></div>
+                <div id="pg-extra" class="page"><div class="hero"><h1>Página Extra Surpresa</h1><p>${emoji} ${emoji} ${emoji}</p></div></div>
+            `;
+
+            return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>${specs.assunto} T${templateId}</title>
+<style>
+:root { --pri: ${specs.corPri}; --bg: ${specs.bgColor}; --txt: ${txt}; --card: ${cardBg}; }
+* { margin:0; padding:0; box-sizing:border-box; font-family:sans-serif; }
+body { background:var(--bg); color:var(--txt); display:flex; flex-direction:${hasSidebar?'row':'column'}; min-height:100vh; overflow-x:hidden;}
+nav { background:${navBg}; padding:20px; display:flex; gap:15px; justify-content:${navAlign}; flex-wrap:wrap; ${hasSidebar?'flex-direction:column; width:250px; border-right:2px solid var(--pri);':'border-bottom:2px solid var(--pri);'} }
+nav button { background:transparent; border:none; color:${navTxt}; font-weight:bold; font-size:16px; cursor:pointer; padding:10px 20px; border-radius:${radius}; transition:0.3s; }
+nav button:hover, nav button.active-btn { background:var(--pri); color:#fff; }
+.content { flex:1; overflow-y:auto; padding-bottom:50px; }
+.page { display:none; animation: fadeIn 0.4s; }
+.page.active { display:block; }
+.hero { padding:80px 20px; text-align:center; background:rgba(0,0,0,0.05); border-bottom:1px solid rgba(0,0,0,0.1); }
+.hero h1 { color:var(--pri); font-size:45px; margin-bottom:15px; }
+.grid { display:grid; grid-template-columns:${gridCols}; gap:20px; padding:20px; }
+.card { background:var(--card); padding:30px; border-radius:${radius}; text-align:center; border:1px solid rgba(0,0,0,0.1); box-shadow:0 4px 10px rgba(0,0,0,0.05); transition:0.2s; }
+.card:hover { transform:scale(1.05); border-color:var(--pri); }
+@keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+</style>
+</head>
+<body>
+<nav id="menu">
+<button onclick="nav('pg-home', this)" class="active-btn">Início</button>
+<button onclick="nav('pg-sobre', this)">Sobre</button>
+<button onclick="nav('pg-produtos', this)">Produtos</button>
+<button onclick="nav('pg-galeria', this)">Galeria</button>
+<button onclick="nav('pg-equipe', this)">Equipe</button>
+<button onclick="nav('pg-faq', this)">FAQ</button>
+<button onclick="nav('pg-blog', this)">Blog</button>
+<button onclick="nav('pg-termos', this)">Termos</button>
+<button onclick="nav('pg-extra', this)">Extra</button>
+<button onclick="nav('pg-contato', this)">Contato</button>
+</nav>
+<div class="content">
+${paginasHTML}
+</div>
+<script>
+function nav(id, button) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-btn'));
+    document.getElementById(id).classList.add('active');
+    button.classList.add('active-btn');
+}
+<\/script>
+</body>
+</html>`;
+        }
+
+        function gerarSiteProfissional(templateId, specs, pedido) {
+            const assunto = specs.assunto || 'Novo projeto';
+            const tipo = /loja|produto|venda|e-commerce/i.test(pedido) ? 'Loja' : /restaurante|comida|receita/i.test(pedido) ? 'Restaurante' : /portf[oó]lio|curr[ií]culo/i.test(pedido) ? 'Portfólio' : /blog|not[ií]cia/i.test(pedido) ? 'Blog' : 'Experiência';
+            const emoji = inferirEmoji(assunto);
+            const itens = Array.from({length: 9}, (_,i) => `<article class="card"><span>${emoji}</span><h3>${tipo} ${i+1}</h3><p>Uma opção criada especialmente para ${assunto}, com conteúdo claro e moderno.</p><button onclick="alert('Você selecionou a opção ${i+1}!')">Ver detalhes</button></article>`).join('');
+            return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${assunto}</title><style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#080d1a;color:#eaf2ff}nav{position:sticky;top:0;z-index:3;display:flex;align-items:center;gap:20px;padding:16px 7%;background:#0b1020ee;backdrop-filter:blur(14px);border-bottom:1px solid #ffffff18}nav b{font-size:22px;color:${specs.corPri}}nav a{color:#dce7ff;text-decoration:none}.links{display:flex;gap:18px;margin-left:auto}.menu{display:none;margin-left:auto}.hero{min-height:58vh;display:grid;place-items:center;text-align:center;padding:80px 8%;background:radial-gradient(circle at 50% 20%,${specs.corPri}66,transparent 55%),linear-gradient(135deg,#101a35,#090d18)}h1{font-size:clamp(40px,8vw,86px);margin:0}.hero p{max-width:720px;font-size:20px;color:#c4cdea}.cta,.card button,form button{border:0;border-radius:12px;padding:13px 20px;background:${specs.corPri};color:white;font-weight:bold;cursor:pointer}.section{padding:70px 7%;max-width:1250px;margin:auto}.tools input{width:min(460px,100%);padding:14px;margin:25px 0;border-radius:12px;border:1px solid #ffffff30;background:#ffffff10;color:inherit}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}.card{padding:25px;border-radius:22px;background:#0b1020cc;border:1px solid #ffffff18;box-shadow:0 14px 35px #0005;transition:.25s}.card:hover{transform:translateY(-7px);border-color:${specs.corPri}}.card span{font-size:42px}.card button{margin-top:12px}form{display:grid;gap:12px;max-width:650px}form input,form textarea{padding:14px;border-radius:12px;border:1px solid #ffffff30;background:#ffffff0d;color:inherit}footer{text-align:center;padding:30px;background:#070a12;color:#8e9ab5}@media(max-width:700px){.menu{display:block}.links{display:none;position:absolute;top:65px;left:0;right:0;padding:20px;background:#0b1020;flex-direction:column}.links.open{display:flex}}
+</style></head><body><nav><b>${emoji} ${assunto}</b><button class="menu" onclick="document.querySelector('.links').classList.toggle('open')">☰</button><div class="links"><a href="#inicio">Início</a><a href="#destaques">Destaques</a><a href="#contato">Contato</a></div></nav><header id="inicio" class="hero"><div><small>${tipo.toUpperCase()} • DESIGN ${templateId+1}</small><h1>${assunto}</h1><p>Um site rápido, responsivo e pronto para apresentar seu projeto em qualquer tela.</p><button class="cta" onclick="document.querySelector('#destaques').scrollIntoView({behavior:'smooth'})">Explorar agora</button></div></header><main><section id="destaques" class="section"><h2>Descubra os destaques</h2><div class="tools"><input id="busca" placeholder="Pesquisar..." oninput="filtrar()"></div><div class="grid">${itens}</div></section><section id="contato" class="section"><h2>Fale conosco</h2><form onsubmit="enviar(event)"><input required placeholder="Seu nome"><input required type="email" placeholder="Seu e-mail"><textarea required rows="5" placeholder="Sua mensagem"></textarea><button>Enviar mensagem</button><output id="retorno"></output></form></section></main><footer>© ${new Date().getFullYear()} ${assunto}. Criado com GreenAI.</footer><script>function filtrar(){let q=document.querySelector('#busca').value.toLowerCase();document.querySelectorAll('.card').forEach(c=>c.hidden=!c.innerText.toLowerCase().includes(q))}function enviar(e){e.preventDefault();document.querySelector('#retorno').textContent='Mensagem enviada com sucesso!';e.target.reset()}<\/script></body></html>`;
+        }
+
+        function gerarJogoHTML(specs) {
+            const titulo = specs.assunto || 'GreenAI Arcade';
+            return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#050814;color:white;font-family:Arial}canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at top,#172554,#020617)}#hud{position:fixed;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;font-weight:bold;pointer-events:none}#help{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);opacity:.7}.pad{display:none;position:fixed;bottom:20px;left:18px;grid-template-columns:55px 55px 55px;gap:5px}.pad button,#fire{border:1px solid #fff5;background:#ffffff20;color:#fff;border-radius:15px;font-size:23px;width:55px;height:55px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#fire{display:none;position:fixed;right:25px;bottom:40px;width:75px;height:75px;border-radius:50%;background:${specs.corPri}99}#over{display:none;position:fixed;inset:0;background:#020617dd;place-items:center;text-align:center}#over button{padding:14px 25px;border:0;border-radius:12px;background:${specs.corPri};color:white}@media(pointer:coarse){.pad{display:grid}#fire{display:block}#help{display:none}}</style></head><body><canvas id="game"></canvas><div id="hud"><b>${titulo}</b><span>Score: <b id="score">0</b> • Lives: <b id="lives">3</b> • Level: <b id="level">1</b></span></div><div id="help">WASD/Arrows: move • Space: shoot</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="fire">●</button><div id="over"><div><h1>Game Over</h1><p id="final"></p><button onclick="restart()">Play Again</button></div></div><script>
+const c=document.querySelector('#game'),x=c.getContext('2d'),keys={},enemies=[],shots=[];let p,score,lives,level,last,spawn,running;const scoreEl=document.querySelector('#score'),livesEl=document.querySelector('#lives'),levelEl=document.querySelector('#level'),fire=document.querySelector('#fire'),over=document.querySelector('#over'),final=document.querySelector('#final');function size(){c.width=innerWidth;c.height=innerHeight}onresize=size;size();onkeydown=e=>{keys[e.key]=1;if(e.code==='Space')shoot()};onkeyup=e=>keys[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>keys[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>keys[b.dataset.k]=0});fire.onpointerdown=shoot;function restart(){p={x:innerWidth/2,y:innerHeight-90,r:18,c:'${specs.corPri}',cool:0};score=0;lives=3;level=1;spawn=0;enemies.length=shots.length=0;running=true;over.style.display='none';last=performance.now();requestAnimationFrame(loop);ui()}function shoot(){if(!running||p.cool>0)return;shots.push({x:p.x,y:p.y-20,v:620});p.cool=.22}function ui(){scoreEl.textContent=score;livesEl.textContent=lives;levelEl.textContent=level}function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}function loop(t){if(!running)return;let d=Math.min((t-last)/1000,.033);last=t;level=1+Math.floor(score/150);p.cool=Math.max(0,p.cool-d);let v=280;if(keys.ArrowLeft||keys.a)p.x-=v*d;if(keys.ArrowRight||keys.d)p.x+=v*d;if(keys.ArrowUp||keys.w)p.y-=v*d;if(keys.ArrowDown||keys.s)p.y+=v*d;p.x=Math.max(18,Math.min(innerWidth-18,p.x));p.y=Math.max(18,Math.min(innerHeight-18,p.y));spawn-=d;if(spawn<=0){enemies.push({x:25+Math.random()*(innerWidth-50),y:-25,r:18,v:90+level*18});spawn=Math.max(.25,1-level*.055)}shots.forEach(s=>s.y-=s.v*d);enemies.forEach(e=>e.y+=e.v*d);for(let i=enemies.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--)if(hit(enemies[i],{...shots[j],r:5})){enemies.splice(i,1);shots.splice(j,1);score+=10;break}if(enemies[i]&&enemies[i].y>innerHeight){enemies.splice(i,1);lives--;if(lives<=0){running=false;final.textContent='Score: '+score;over.style.display='grid'}}}x.clearRect(0,0,innerWidth,innerHeight);x.fillStyle=p.c;x.beginPath();x.moveTo(p.x,p.y-24);x.lineTo(p.x-18,p.y+20);x.lineTo(p.x+18,p.y+20);x.fill();x.fillStyle='#fde047';shots.forEach(s=>x.fillRect(s.x-3,s.y-10,6,16));x.fillStyle='#ef4444';enemies.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});ui();requestAnimationFrame(loop)}restart();<\/script></body></html>`;
+        }
+
+        function gerarJogoVariado(specs, pedido) {
+            const grupos = {
+                tiro: [
+                    {nome:'Star Defender',icone:'▲',fundo:'#020617',cor:'#22d3ee',vel:105,objetivo:'Shoot the enemy fleet!'},
+                    {nome:'Neon Blaster',icone:'◆',fundo:'#16051f',cor:'#f0abfc',vel:125,objetivo:'Destroy the neon drones!'},
+                    {nome:'Tank Assault',icone:'▣',fundo:'#17210d',cor:'#a3e635',vel:82,objetivo:'Defend the battlefield!'}
+                ],
+                aventura: [
+                    {nome:'Crystal Quest',icone:'◇',fundo:'#082f49',cor:'#67e8f9',vel:78,objetivo:'Collect crystals and avoid guardians!'},
+                    {nome:'Jungle Explorer',icone:'●',fundo:'#052e16',cor:'#4ade80',vel:88,objetivo:'Find ancient treasures!'},
+                    {nome:'Moon Journey',icone:'☾',fundo:'#1e1b4b',cor:'#c4b5fd',vel:68,objetivo:'Recover the lost moon fragments!'}
+                ],
+                acao: [
+                    {nome:'Cyber Rush',icone:'⬢',fundo:'#111827',cor:'#fb7185',vel:145,objetivo:'Survive the cyber rush!'},
+                    {nome:'Lava Escape',icone:'▲',fundo:'#450a0a',cor:'#fbbf24',vel:155,objetivo:'Escape the falling fire!'},
+                    {nome:'Shadow Arena',icone:'✦',fundo:'#09090b',cor:'#a78bfa',vel:135,objetivo:'Defeat the shadow swarm!'}
+                ],
+                corrida: [
+                    {nome:'Neon Highway',icone:'▰',fundo:'#172554',cor:'#38bdf8',vel:165,objetivo:'Dodge traffic and reach maximum speed!'},
+                    {nome:'Desert Rally',icone:'◆',fundo:'#451a03',cor:'#fb923c',vel:148,objetivo:'Race through the desert storm!'},
+                    {nome:'Galaxy Racer',icone:'▲',fundo:'#1e1b4b',cor:'#e879f9',vel:178,objetivo:'Win the race between the stars!'}
+                ],
+                plataforma: [
+                    {nome:'Sky Islands',icone:'☁',fundo:'#0c4a6e',cor:'#7dd3fc',vel:92,objetivo:'Climb through the floating islands!'},
+                    {nome:'Cave Jumper',icone:'⬟',fundo:'#292524',cor:'#f59e0b',vel:105,objetivo:'Escape the crystal cave!'},
+                    {nome:'Candy Kingdom',icone:'●',fundo:'#500724',cor:'#f9a8d4',vel:85,objetivo:'Collect candy across the kingdom!'}
+                ],
+                puzzle: [
+                    {nome:'Color Reactor',icone:'◈',fundo:'#042f2e',cor:'#2dd4bf',vel:72,objetivo:'Collect matching energy colors!'},
+                    {nome:'Number Lab',icone:'#',fundo:'#172554',cor:'#facc15',vel:76,objetivo:'Solve the falling number challenge!'},
+                    {nome:'Memory Gates',icone:'▦',fundo:'#2e1065',cor:'#c084fc',vel:68,objetivo:'Remember the safe symbols!'}
+                ]
+            };
+            const texto = pedido.toLowerCase();
+            const categoria = /corrida|carro|racing|race/.test(texto) ? 'corrida' : /plataforma|platform|pular|jump/.test(texto) ? 'plataforma' : /puzzle|quebra.?cabe[cç]a|mem[oó]ria/.test(texto) ? 'puzzle' : /aventura|explor|quest|tesouro/.test(texto) ? 'aventura' : /a[cç][aã]o|luta|arena|sobreviv/.test(texto) ? 'acao' : 'tiro';
+            const numeroPedido = Math.max(0, Math.min(2, (parseInt((texto.match(/\b[123]\b/)||[])[0])||1)-1));
+            const g = grupos[categoria][numeroPedido];
+            if (/\b3d\b/.test(texto)) return gerarJogo3D(specs, g, categoria);
+            if (categoria === 'aventura') return gerarAventuraMundoAberto(specs, g, numeroPedido);
+            const aventura = categoria === 'aventura';
+            const acao = categoria === 'acao';
+            const titulo = `${g.nome} — ${specs.assunto || 'GreenAI Game'}`;
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:${g.fundo};color:#fff;font-family:Arial}canvas{display:block;width:100vw;height:100vh;background:radial-gradient(circle at top,${g.cor}33,${g.fundo} 68%)}#hud{position:fixed;inset:12px 14px auto;display:flex;justify-content:space-between;font-weight:800;text-shadow:0 2px 6px #000}#mission{position:fixed;top:45px;width:100%;text-align:center;color:${g.cor}}#help{position:fixed;bottom:12px;width:100%;text-align:center;opacity:.7}.pad{display:none;position:fixed;bottom:20px;left:18px;grid-template-columns:54px 54px 54px;gap:5px}.pad button,#power{border:1px solid #fff5;background:#ffffff22;color:#fff;border-radius:14px;width:54px;height:54px;font-size:22px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#power{display:none;position:fixed;right:24px;bottom:38px;width:76px;height:76px;border-radius:50%;background:${g.cor}99}#over{display:none;position:fixed;inset:0;background:#000d;place-items:center;text-align:center}#over button{padding:14px 22px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#power{display:block}#help{display:none}}</style></head><body><canvas id="c"></canvas><div id="hud"><span>${g.icone} ${titulo}</span><span>Score <b id="s">0</b> • Lives <b id="l">3</b> • Level <b id="lv">1</b></span></div><div id="mission">${g.objetivo}</div><div id="help">WASD/Arrows to move • Space for power</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="power">${aventura?'⚡':'●'}</button><div id="over"><div><h1>Game Over</h1><p id="result"></p><button onclick="start()">Play Again</button></div></div><script>
+const c=document.querySelector('#c'),x=c.getContext('2d'),K={},foes=[],shots=[],gems=[];const S=document.querySelector('#s'),L=document.querySelector('#l'),LV=document.querySelector('#lv'),O=document.querySelector('#over'),R=document.querySelector('#result');let p,score,lives,level,last,timer,run;function resize(){c.width=innerWidth;c.height=innerHeight}onresize=resize;resize();onkeydown=e=>{K[e.key]=1;if(e.code==='Space')power()};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#power').onpointerdown=power;function start(){p={x:innerWidth/2,y:innerHeight-90,r:18,cool:0,shield:0};score=0;lives=3;level=1;last=performance.now();timer=0;run=true;foes.length=shots.length=gems.length=0;O.style.display='none';requestAnimationFrame(loop)}function power(){if(!run||p.cool>0)return;p.cool=${aventura?'1.5':acao?'.45':'.22'};${aventura?'p.shield=1.2;':acao?"for(let a=0;a<6;a++)shots.push({x:p.x,y:p.y,vx:Math.cos(a)*520,vy:Math.sin(a)*520});":"shots.push({x:p.x,y:p.y-22,vx:0,vy:-650});"}}function hit(a,b){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r}function end(){run=false;R.textContent='Final score: '+score;O.style.display='grid'}function loop(t){if(!run)return;let d=Math.min(.033,(t-last)/1000);last=t;level=1+Math.floor(score/120);p.cool=Math.max(0,p.cool-d);p.shield=Math.max(0,p.shield-d);let mv=280;if(K.ArrowLeft||K.a)p.x-=mv*d;if(K.ArrowRight||K.d)p.x+=mv*d;if(K.ArrowUp||K.w)p.y-=mv*d;if(K.ArrowDown||K.s)p.y+=mv*d;p.x=Math.max(20,Math.min(innerWidth-20,p.x));p.y=Math.max(70,Math.min(innerHeight-20,p.y));timer-=d;if(timer<=0){let good=${aventura}&&Math.random()<.55;(good?gems:foes).push({x:25+Math.random()*(innerWidth-50),y:-25,r:good?12:18,v:${g.vel}+level*14});timer=Math.max(.22,.85-level*.04)}foes.forEach(e=>e.y+=e.v*d);gems.forEach(e=>e.y+=e.v*d);shots.forEach(q=>{q.x+=q.vx*d;q.y+=q.vy*d});for(let i=foes.length-1;i>=0;i--){for(let j=shots.length-1;j>=0;j--)if(hit(foes[i],{...shots[j],r:5})){foes.splice(i,1);shots.splice(j,1);score+=10;break}if(foes[i]&&hit(foes[i],p)){foes.splice(i,1);if(!p.shield)lives--;if(lives<=0)end()}else if(foes[i]&&foes[i].y>innerHeight+30){foes.splice(i,1);${aventura?'':'lives--;if(lives<=0)end()'}}}for(let i=gems.length-1;i>=0;i--){if(hit(gems[i],p)){gems.splice(i,1);score+=20}else if(gems[i].y>innerHeight)gems.splice(i,1)}x.clearRect(0,0,c.width,c.height);x.fillStyle='${g.cor}';x.beginPath();x.arc(p.x,p.y,p.r+(p.shield?7:0),0,7);x.fill();x.fillStyle='#ef4444';foes.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});x.fillStyle='#fde047';gems.forEach(e=>{x.fillRect(e.x-10,e.y-10,20,20)});shots.forEach(q=>x.fillRect(q.x-3,q.y-7,6,14));S.textContent=score;L.textContent=lives;LV.textContent=level;requestAnimationFrame(loop)}start();<\/script></body></html>`;
+        }
+
+        function gerarJogo3D(specs, g, categoria) {
+            const titulo = `${g.nome} 3D — ${specs.assunto || 'GreenAI World'}`;
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#020617;color:#fff;font-family:Arial}canvas{display:block}#hud{position:fixed;inset:12px 14px auto;display:flex;justify-content:space-between;z-index:4;font-weight:bold;text-shadow:0 2px 6px #000}#quest{position:fixed;top:48px;left:14px;z-index:4;background:#020617bb;border:1px solid ${g.cor};padding:10px 14px;border-radius:12px}.pad{display:none;position:fixed;bottom:18px;left:18px;z-index:5;grid-template-columns:56px 56px 56px;gap:5px}.pad button,#action{width:56px;height:56px;border-radius:15px;border:1px solid #fff6;background:#ffffff26;color:#fff;font-size:22px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#action{display:none;position:fixed;right:25px;bottom:38px;z-index:5;width:80px;height:80px;border-radius:50%;background:${g.cor}bb;font-size:14px;font-weight:bold}#done{display:none;position:fixed;inset:0;z-index:10;background:#020617dd;place-items:center;text-align:center}#done button{padding:14px 24px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#action{display:block}}</style></head><body><div id="hud"><span>🌐 ${titulo}</span><span>Crystals: <b id="score">0</b>/15 • Lives: <b id="lives">5</b></span></div><div id="quest">Explore the 3D open world, collect crystals and activate all towers.</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="action">DASH</button><div id="done"><div><h1 id="endTitle">World Complete!</h1><p id="endText"></p><button onclick="location.reload()">Play Again</button></div></div><script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script><script>
+const scene=new THREE.Scene();scene.background=new THREE.Color('${g.fundo}');scene.fog=new THREE.Fog('${g.fundo}',70,260);const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,600),renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.shadowMap.enabled=true;document.body.prepend(renderer.domElement);scene.add(new THREE.HemisphereLight(0xbfe8ff,0x243018,1.5));const sun=new THREE.DirectionalLight(0xffffff,1.3);sun.position.set(40,80,20);sun.castShadow=true;scene.add(sun);const ground=new THREE.Mesh(new THREE.PlaneGeometry(420,420,30,30),new THREE.MeshStandardMaterial({color:'${categoria==='aventura'?'#287a46':'#334155'}',roughness:.9}));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);const player=new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,2.8,12),new THREE.MeshStandardMaterial({color:'${g.cor}',emissive:'${g.cor}',emissiveIntensity:.25}));player.position.y=1.5;player.castShadow=true;scene.add(player);const crystals=[],enemies=[],towers=[],K={};let score=0,lives=5,dash=0,inv=0,run=true,last=performance.now();function rnd(){return Math.random()*360-180}function crystal(){let m=new THREE.Mesh(new THREE.OctahedronGeometry(.65),new THREE.MeshStandardMaterial({color:0xffe45c,emissive:0xffb000,emissiveIntensity:.6}));m.position.set(rnd(),1,rnd());scene.add(m);crystals.push(m)}for(let i=0;i<38;i++)crystal();for(let i=0;i<55;i++){let trunk=new THREE.Mesh(new THREE.CylinderGeometry(.3,.5,3),new THREE.MeshStandardMaterial({color:0x5c3b20})),top=new THREE.Mesh(new THREE.ConeGeometry(2,5,8),new THREE.MeshStandardMaterial({color:0x167447}));trunk.position.set(rnd(),1.5,rnd());top.position.set(trunk.position.x,5,trunk.position.z);scene.add(trunk,top)}for(let i=0;i<18;i++){let e=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshStandardMaterial({color:0xef4444,emissive:0x660000}));e.position.set(rnd(),1,rnd());scene.add(e);enemies.push(e)}for(let i=0;i<3;i++){let q=new THREE.Group(),base=new THREE.Mesh(new THREE.CylinderGeometry(2.2,3,8,8),new THREE.MeshStandardMaterial({color:0x64748b})),orb=new THREE.Mesh(new THREE.SphereGeometry(1.4),new THREE.MeshStandardMaterial({color:0x475569,emissive:0x000000}));orb.position.y=5;q.add(base,orb);q.position.set(rnd(),4,rnd());q.userData={on:false,orb};scene.add(q);towers.push(q)}onkeydown=e=>{K[e.key]=1;if(e.code==='Space')dash=1};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#action').onpointerdown=()=>dash=1;onresize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)};function dist(a,b){return a.position.distanceTo(b.position)}function finish(ok){run=false;endTitle.textContent=ok?'3D World Complete!':'Adventure Over';endText.textContent='Crystals: '+score;done.style.display='grid'}function loop(t){requestAnimationFrame(loop);let d=Math.min(.033,(t-last)/1000);last=t;if(run){dash=Math.max(0,dash-d);inv=Math.max(0,inv-d);let dx=(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),dz=(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0),len=Math.hypot(dx,dz)||1,v=dash>0?72:24;player.position.x=THREE.MathUtils.clamp(player.position.x+dx/len*v*d,-202,202);player.position.z=THREE.MathUtils.clamp(player.position.z+dz/len*v*d,-202,202);if(dx||dz)player.rotation.y=Math.atan2(dx,dz);crystals.forEach(c=>{c.rotation.y+=d*2;c.position.y=1.2+Math.sin(t*.003+c.position.x)*.35});for(let i=crystals.length-1;i>=0;i--)if(dist(player,crystals[i])<2){scene.remove(crystals[i]);crystals.splice(i,1);score++}enemies.forEach(e=>{let dir=new THREE.Vector3().subVectors(player.position,e.position).setY(0).normalize();e.position.addScaledVector(dir,(3+score*.05)*d);if(dist(player,e)<2&&inv<=0){lives--;inv=1.5;if(lives<=0)finish(false)}});towers.forEach(q=>{if(dist(player,q)<5&&!q.userData.on){q.userData.on=true;q.userData.orb.material.color.set('${g.cor}');q.userData.orb.material.emissive.set('${g.cor}')}});if(score>=15&&towers.every(q=>q.userData.on))finish(true);scoreEl.textContent=score;livesEl.textContent=lives}let target=new THREE.Vector3(player.position.x,player.position.y+9,player.position.z+16);camera.position.lerp(target,.08);camera.lookAt(player.position.x,player.position.y+1,player.position.z);renderer.render(scene,camera)}const scoreEl=document.querySelector('#score'),livesEl=document.querySelector('#lives'),done=document.querySelector('#done'),endTitle=document.querySelector('#endTitle'),endText=document.querySelector('#endText');loop(performance.now());<\/script></body></html>`;
+        }
+
+        function gerarAventuraMundoAberto(specs, g, variante) {
+            const titulo = `${g.nome} — ${specs.assunto || 'Open World Adventure'}`;
+            const mapa = variante === 0 ? {chao:'#164e63',grama:'#0e7490',agua:'#083344'} : variante === 1 ? {chao:'#14532d',grama:'#166534',agua:'#075985'} : {chao:'#312e81',grama:'#4338ca',agua:'#111827'};
+            return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>${titulo}</title><style>*{box-sizing:border-box;touch-action:none}body{margin:0;overflow:hidden;background:#020617;color:white;font-family:Arial}canvas{display:block;width:100vw;height:100vh}#hud{position:fixed;left:14px;right:14px;top:12px;display:flex;justify-content:space-between;font-weight:bold;text-shadow:0 2px 5px #000}#quest{position:fixed;top:48px;left:14px;padding:10px 14px;background:#020617bb;border:1px solid ${g.cor};border-radius:12px}.pad{display:none;position:fixed;bottom:18px;left:18px;grid-template-columns:56px 56px 56px;gap:5px}.pad button,#dash{width:56px;height:56px;border-radius:15px;border:1px solid #fff6;background:#ffffff22;color:white;font-size:23px}.up{grid-column:2}.left{grid-column:1}.down{grid-column:2}.right{grid-column:3}#dash{display:none;position:fixed;right:25px;bottom:38px;width:78px;height:78px;border-radius:50%;background:${g.cor}aa;font-size:15px;font-weight:bold}#win{display:none;position:fixed;inset:0;background:#020617dd;place-items:center;text-align:center}#win button{padding:14px 24px;border:0;border-radius:12px;background:${g.cor};font-weight:bold}@media(pointer:coarse){.pad{display:grid}#dash{display:block}}</style></head><body><canvas id="c"></canvas><div id="hud"><span>🌍 ${titulo}</span><span>Crystals: <b id="score">0</b>/20 • Lives: <b id="lives">5</b></span></div><div id="quest">Explore the open world, activate 3 ancient towers and collect 20 crystals.</div><div class="pad"><button class="up" data-k="ArrowUp">▲</button><button class="left" data-k="ArrowLeft">◀</button><button class="down" data-k="ArrowDown">▼</button><button class="right" data-k="ArrowRight">▶</button></div><button id="dash">DASH</button><div id="win"><div><h1 id="endTitle">World Complete!</h1><p id="endText"></p><button onclick="start()">Explore Again</button></div></div><script>
+const c=document.querySelector('#c'),x=c.getContext('2d'),K={},WORLD=4200,crystals=[],enemies=[],towers=[],trees=[],win=document.querySelector('#win'),endTitle=document.querySelector('#endTitle'),endText=document.querySelector('#endText');let p,score,lives,last,run,camX,camY;function resize(){c.width=innerWidth;c.height=innerHeight}onresize=resize;resize();onkeydown=e=>{K[e.key]=1;if(e.code==='Space')dash()};onkeyup=e=>K[e.key]=0;document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=()=>K[b.dataset.k]=1;b.onpointerup=b.onpointercancel=()=>K[b.dataset.k]=0});document.querySelector('#dash').onpointerdown=dash;function rnd(m=1){return Math.random()*m}function place(a,n,type){for(let i=0;i<n;i++)a.push({x:100+rnd(WORLD-200),y:100+rnd(WORLD-200),r:type==='tower'?42:type==='enemy'?20:14,on:false})}function start(){p={x:WORLD/2,y:WORLD/2,r:18,dash:0,inv:0};score=0;lives=5;run=true;crystals.length=enemies.length=towers.length=trees.length=0;place(crystals,45,'crystal');place(enemies,34,'enemy');place(towers,3,'tower');place(trees,140,'tree');document.querySelector('#win').style.display='none';last=performance.now();requestAnimationFrame(loop)}function dash(){if(p.dash<=0)p.dash=1.1}function hit(a,b,n=0){return Math.hypot(a.x-b.x,a.y-b.y)<a.r+b.r+n}function finish(ok){run=false;endTitle.textContent=ok?'World Complete!':'Adventure Over';endText.textContent='Crystals collected: '+score;win.style.display='grid'}function loop(t){if(!run)return;let d=Math.min(.033,(t-last)/1000);last=t;p.dash=Math.max(0,p.dash-d);p.inv=Math.max(0,p.inv-d);let v=p.dash>0?650:270,dx=(K.ArrowRight||K.d?1:0)-(K.ArrowLeft||K.a?1:0),dy=(K.ArrowDown||K.s?1:0)-(K.ArrowUp||K.w?1:0),len=Math.hypot(dx,dy)||1;p.x=Math.max(25,Math.min(WORLD-25,p.x+dx/len*v*d));p.y=Math.max(25,Math.min(WORLD-25,p.y+dy/len*v*d));enemies.forEach(e=>{let a=Math.atan2(p.y-e.y,p.x-e.x);e.x+=Math.cos(a)*(55+(score/3))*d;e.y+=Math.sin(a)*(55+(score/3))*d;if(hit(p,e)&&p.inv<=0){lives--;p.inv=1.4;if(lives<=0)finish(false)}});for(let i=crystals.length-1;i>=0;i--)if(hit(p,crystals[i])){crystals.splice(i,1);score++}towers.forEach(q=>{if(hit(p,q,18))q.on=true});if(score>=20&&towers.every(q=>q.on))finish(true);camX=Math.max(0,Math.min(WORLD-innerWidth,p.x-innerWidth/2));camY=Math.max(0,Math.min(WORLD-innerHeight,p.y-innerHeight/2));draw();document.querySelector('#score').textContent=score;document.querySelector('#lives').textContent=lives;requestAnimationFrame(loop)}function draw(){x.fillStyle='${mapa.chao}';x.fillRect(0,0,c.width,c.height);x.save();x.translate(-camX,-camY);x.fillStyle='${mapa.agua}';for(let i=0;i<12;i++){x.beginPath();x.arc((i*367)%WORLD,(i*743)%WORLD,130,0,7);x.fill()}x.fillStyle='${mapa.grama}';trees.forEach(q=>{x.beginPath();x.arc(q.x,q.y,18,0,7);x.fill()});x.fillStyle='#fde047';crystals.forEach(q=>{x.save();x.translate(q.x,q.y);x.rotate(Math.PI/4);x.fillRect(-9,-9,18,18);x.restore()});towers.forEach(q=>{x.fillStyle=q.on?'${g.cor}':'#64748b';x.fillRect(q.x-22,q.y-45,44,90);x.beginPath();x.arc(q.x,q.y-48,28,0,7);x.fill()});x.fillStyle='#ef4444';enemies.forEach(e=>{x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()});x.fillStyle=p.inv>0?'#fff':'${g.cor}';x.beginPath();x.arc(p.x,p.y,p.r+(p.dash>0?8:0),0,7);x.fill();x.restore();let scale=130/WORLD,mx=innerWidth-145,my=70;x.fillStyle='#020617bb';x.fillRect(mx,my,130,130);x.fillStyle='${g.cor}';x.fillRect(mx+p.x*scale-2,my+p.y*scale-2,5,5);x.strokeStyle='#ffffff55';x.strokeRect(mx,my,130,130)}start();<\/script></body></html>`;
+        }
+
+        // ================= MOTOR COMBINATÓRIO DE BILHÕES DE RESPOSTAS (FRIO E LÓGICO) =================
+        function escolher(lista) { return lista[Math.floor(Math.random() * lista.length)]; }
+
+        function gerarSaudacaoDinamica(nomeChat) {
+            const ab = escolher(["Olá", "Status: Online.", "Conectado.", "Sistema pronto.", "Iniciando sessão."]);
+            const comp = escolher(["Em que posso te ajudar?", "Qual a diretriz de hoje?", "O que vamos compilar agora?", "Aguardando seu comando.", "Pronto para processar dados."]);
+            const emj = escolher(["🤖", "⚡", "💻", "🧠", "🔧"]);
+            let nome = (nomeChat && nomeChat !== "Principal") ? ` ${nomeChat}` : "";
+            const estruturas = [`${ab}${nome}. ${comp} ${emj}`, `Saudações${nome}. ${comp} ${emj}`];
+            return escolher(estruturas);
+        }
+
+        function gerarRespostaQuemSou(nomeChat) {
+            const intro = escolher(["Eu sou a GreenAI", "Aqui é a GreenAI", "Operando como GreenAI", "Meu identificador é GreenAI"]);
+            const status = escolher(["direto da Matriz.", "rodando localmente com força total.", "100% online.", "pronta para o trabalho."]);
+            const acoes = escolher(["Posso compilar lógicas em C#, Python e JS", "Consigo renderizar sites inteiros no Canvas", "Fui estruturada para pesquisar na Wiki, gerar vídeos e imagens visuais"]);
+            const fim = escolher(["Qual é o desafio de hoje?", "Aguardando próximo input.", "Pronto para o próximo comando."]);
+            const emj = escolher(["🧠", "💻", "🦾", "🛠️"]);
+            let nome = (nomeChat && nomeChat !== "Principal") ? `, ${nomeChat}` : "";
+            return `${intro}${nome}, ${status} ${acoes}. ${fim} ${emj}`;
+        }
+
+        function gerarRespostaHora() {
+            const intro = escolher(["Anotado: ", "De acordo com meu relógio interno, ", "Sincronizando com o servidor... ", "Neste ciclo de processamento, "]);
+            const tempo = new Intl.DateTimeFormat("pt-BR", { dateStyle: "full", timeStyle: "short" }).format(new Date());
+            const fim = escolher(["Não perca o prazo! ⏱️", "Temos muito tempo pra codar! 🕰️", "Anotado no log do sistema. ⌚"]);
+            return `${intro}agora é ${tempo}. ${fim}`;
+        }
+
+        function gerarRespostaAjuda(nomeChat) {
+            const intro = escolher(["Claro, vamos lá.", "Precisando de parâmetros?", "Sem problemas, eu guio o processo.", "Diretrizes ativadas."]);
+            const meio = escolher([
+                "Você pode solicitar a geração de códigos complexos, instanciar sites interativos no Canvas ou gerar imagens.",
+                "Experimente pedir documentações detalhadas, pesquisar no modo Estudos ou abrir o terminal RedCine.",
+                "Sou programada para montar telas responsivas, extrair dados reais na Wikipédia ou renderizar vídeos cinematográficos."
+            ]);
+            const fim = escolher(["Basta inserir o input desejado.", "Manda a sua solicitação lógica.", "Qual framework testaremos primeiro?"]);
+            let nome = (nomeChat && nomeChat !== "Principal") ? ` ${nomeChat}` : "";
+            return `${intro}${nome} ${meio} ${fim} 🚀`;
+        }
+
+        function gerarRespostaScratch(nomeChat) {
+            const intro = escolher(["O Scratch.", "Entendido, Scratch.", "Confirmado.", "Boa pergunta de lógica."]);
+            const def = escolher(["Ele é uma linguagem de programação visual baseada em blocos.", "É uma plataforma funcional para criar jogos e animações manipulando blocos.", "É a engine visual do MIT onde você programa encaixando peças lógicas."]);
+            const comp = escolher(["É uma ferramenta excelente para treinar raciocínio algorítmico.", "Permite que pessoas criem projetos interativos de forma intuitiva.", "Possui uma base de usuários vasta focada na lógica compartilhada."]);
+            const fim = escolher(["Você costuma compilar lá?", "Quer ajuda com algum bloco específico?", "Já desenhou algum sistema lá?"]);
+            const emj = escolher(["🧩", "🎮", "🕹️", "💻"]);
+            let nome = (nomeChat && nomeChat !== "Principal") ? ` ${nomeChat},` : "";
+            return `${intro}${nome} ${def} ${comp} ${fim} ${emj}`;
+        }
+
+        function gerarDesculpaDinamica(nomeChat) {
+            const inicios = ["Hmm", "Analisando", "Interessante", "Aviso de sistema"];
+            const meios = ["não consegui mapear completamente a sua solicitação", "meus circuitos não encontraram um padrão correspondente", "preciso de dados adicionais sobre o seu pedido", "essa requisição exige mais parâmetros", "ocorreu um impasse na lógica do comando"];
+            const fins = ["Pode reestruturar a frase?", "O que exatamente você quer processar?", "Pode detalhar as variáveis?", "Tente refazer a instrução.", "Seja mais específico nos dados, por favor."];
+            const emojis = ["⚙️", "🧐", "🔋", "🔌"];
+            let nome = (nomeChat && nomeChat !== "Principal") ? ` ${nomeChat}...` : "...";
+            return `${escolher(inicios)},${nome} ${escolher(meios)}. ${escolher(fins)} ${escolher(emojis)}`;
+        }
+
+        // ================= GREENAI KNOWLEDGE CORE 5.0 =================
+        // Base local: funciona mesmo sem API. Aceita perguntas escritas de vários jeitos.
+        const RECEITAS = {
+            "bolo de chocolate": ["3 ovos", "2 xícaras de farinha", "1 xícara de açúcar", "1 xícara de leite", "1/2 xícara de óleo", "1 xícara de chocolate em pó", "1 colher de fermento"],
+            "bolo de cenoura": ["3 cenouras médias", "3 ovos", "1/2 xícara de óleo", "2 xícaras de açúcar", "2 e 1/2 xícaras de farinha", "1 colher de fermento"],
+            "pão": ["500 g de farinha", "10 g de fermento biológico seco", "300 ml de água morna", "1 colher de açúcar", "1 colher de sal", "2 colheres de óleo"],
+            "pão de queijo": ["500 g de polvilho", "250 ml de leite", "100 ml de óleo", "2 ovos", "250 g de queijo ralado", "sal"],
+            "brigadeiro": ["1 lata de leite condensado", "1 colher de manteiga", "4 colheres de chocolate em pó", "granulado"],
+            "panqueca": ["1 xícara de farinha", "1 xícara de leite", "1 ovo", "1 colher de óleo", "1 pitada de sal"],
+            "pizza": ["500 g de farinha", "10 g de fermento", "300 ml de água", "2 colheres de azeite", "sal", "molho e cobertura"],
+            "cookie": ["2 xícaras de farinha", "1 xícara de açúcar", "100 g de manteiga", "1 ovo", "1 colher de fermento", "gotas de chocolate"],
+            "brownie": ["200 g de chocolate", "150 g de manteiga", "3 ovos", "1 xícara de açúcar", "1 xícara de farinha"],
+            "pudim": ["1 lata de leite condensado", "a mesma medida de leite", "3 ovos", "1 xícara de açúcar para a calda"],
+            "mousse de maracujá": ["1 lata de leite condensado", "1 caixa de creme de leite", "1 medida de suco concentrado de maracujá"],
+            "arroz": ["1 xícara de arroz", "2 xícaras de água", "alho", "óleo", "sal"],
+            "feijão": ["2 xícaras de feijão", "água", "alho", "cebola", "louro", "sal"],
+            "macarrão": ["500 g de macarrão", "água", "sal", "molho de tomate", "alho e cebola"],
+            "lasanha": ["massa de lasanha", "molho", "500 g de carne moída", "presunto", "queijo", "cebola e alho"],
+            "omelete": ["2 ovos", "sal", "pimenta", "queijo", "tomate e cheiro-verde opcionais"],
+            "purê de batata": ["5 batatas", "1 colher de manteiga", "1/2 xícara de leite", "sal"],
+            "sopa de legumes": ["batata", "cenoura", "abóbora", "chuchu", "cebola", "alho", "água e sal"],
+            "salada": ["alface", "tomate", "cenoura", "pepino", "azeite", "limão e sal"],
+            "vitamina de banana": ["2 bananas", "400 ml de leite", "aveia", "açúcar ou mel opcional"],
+            "chocolate quente": ["500 ml de leite", "3 colheres de chocolate em pó", "1 colher de amido", "açúcar"],
+            "café": ["500 ml de água", "3 colheres de café moído", "açúcar opcional"],
+            "limonada": ["3 limões", "1 litro de água", "açúcar", "gelo"],
+            "torta de frango": ["2 xícaras de farinha", "2 xícaras de leite", "3 ovos", "1/2 xícara de óleo", "fermento", "frango desfiado temperado"],
+            "coxinha": ["2 xícaras de caldo", "2 xícaras de farinha", "1 colher de manteiga", "frango desfiado", "farinha de rosca"],
+            "hambúrguer": ["500 g de carne moída", "sal", "pimenta", "pão", "queijo", "salada e molho"],
+            "batata frita": ["batatas", "óleo", "sal"],
+            "pipoca": ["1/2 xícara de milho", "óleo", "sal ou açúcar"],
+            "mingau": ["500 ml de leite", "3 colheres de aveia ou amido", "açúcar", "canela"],
+            "waffle": ["2 xícaras de farinha", "2 ovos", "1 e 1/2 xícara de leite", "3 colheres de manteiga", "fermento", "açúcar"]
+        };
+
+        function localizarReceita(t) {
+            const nomes = Object.keys(RECEITAS).sort((a,b) => b.length-a.length);
+            return nomes.find(nome => t.includes(nome));
+        }
+
+        function responderReceita(nome) {
+            const i = RECEITAS[nome];
+            let preparo = `Misture e prepare os ingredientes de ${nome} na ordem indicada.`;
+            if (/bolo|brownie|cookie|torta/.test(nome)) preparo += " Asse em forno preaquecido a 180 °C e acompanhe até ficar pronto.";
+            else if (nome === "brigadeiro") preparo = "Leve tudo ao fogo baixo, mexendo até desgrudar da panela. Espere esfriar e enrole.";
+            else if (nome === "pudim") preparo = "Faça a calda, bata os demais ingredientes e asse em banho-maria até firmar.";
+            else if (/arroz/.test(nome)) preparo = "Refogue o alho, junte o arroz, a água e o sal; cozinhe tampado em fogo baixo.";
+            else if (/feijão/.test(nome)) preparo = "Deixe de molho, cozinhe na pressão e finalize com alho, cebola e sal.";
+            else if (/macarrão/.test(nome)) preparo = "Cozinhe em água com sal até ficar al dente, escorra e misture ao molho.";
+            else if (/omelete/.test(nome)) preparo = "Bata os ovos, misture os recheios e doure dos dois lados em frigideira.";
+            else if (/pipoca/.test(nome)) preparo = "Aqueça o óleo com o milho em panela tampada e mexa a panela até os estouros pararem.";
+            return `🍳 RECEITA: ${nome.toUpperCase()}\n\nIngredientes:\n• ${i.join("\n• ")}\n\nModo de preparo:\n${preparo}\n\nCuidado com forno, fogo, óleo quente e facas; peça ajuda a um adulto quando necessário.`;
+        }
+
+        const GUIAS_DEV = [
+            {k:["unity","rigidbody"], r:"Na Unity, Rigidbody aplica física ao objeto. Adicione o componente, mantenha Use Gravity ligado e mova pelo Rigidbody em FixedUpdate. Para colisões, os dois objetos precisam de Collider e pelo menos um deles precisa de Rigidbody."},
+            {k:["unity","camera"], r:"Para câmera FPS sem Cinemachine: coloque uma Camera como filha do Player, leia Mouse X/Y, gire o Player no eixo Y e a Camera no eixo X. Trave o cursor com Cursor.lockState = CursorLockMode.Locked."},
+            {k:["unity","textmeshpro"], r:"Use TMPro.TMP_Text para textos e TMPro.TMP_InputField para entrada. Importe os recursos em Window > TextMeshPro > Import TMP Essential Resources."},
+            {k:["unity","salvar"], r:"Para salvar na Unity, crie uma classe [System.Serializable], converta com JsonUtility.ToJson e grave em Application.persistentDataPath. Carregue com File.ReadAllText e JsonUtility.FromJson."},
+            {k:["unity","json"], r:"O JSON da Unity deve ficar em Application.persistentDataPath, nunca dentro de Assets no jogo compilado. Salve apenas dados simples; referências a GameObjects precisam virar IDs."},
+            {k:["unity","cena"], r:"Para trocar de cena, adicione a cena em Build Settings e use SceneManager.LoadScene(\"NomeDaCena\"). Inclua using UnityEngine.SceneManagement; no começo do script."},
+            {k:["unity","apk"], r:"Para gerar APK: instale Android Build Support, SDK, NDK e OpenJDK; escolha Android em Build Settings, use Switch Platform, defina Package Name e deixe Build App Bundle desmarcado."},
+            {k:["unity","webgl"], r:"Para WebGL, reduza texturas e áudio, evite arquivos gigantes, use compressão Brotli/Gzip compatível com o servidor e teste por HTTP; abrir index.html diretamente pode falhar."},
+            {k:["unity","fps"], r:"Um FPS básico precisa de CharacterController, câmera filha, movimento, gravidade, raycast para tiros, vida, munição e inimigos com estados de patrulha, perseguição e ataque."},
+            {k:["unity","otimizar"], r:"Para otimizar Unity: use iluminação baked, occlusion culling, LOD, object pooling, texturas comprimidas, poucos materiais, sombras curtas e limite de FPS. Evite Instantiate/Destroy repetidamente."},
+            {k:["unity","erro"], r:"Para corrigir erro na Unity, leia a primeira mensagem vermelha completa, clique duas vezes nela e corrija primeiro o erro mais antigo. Um único erro pode criar vários outros."},
+            {k:["scratch","movimento"], r:"No Scratch, use quando bandeira clicada → para sempre → se tecla direita pressionada, mude x por 5; esquerda, mude x por -5; cima e baixo alteram y."},
+            {k:["scratch","colisao"], r:"Para colisão no Scratch: mova o personagem, verifique se está tocando a cor/objeto da parede e desfaça o movimento. Isso impede atravessar obstáculos."},
+            {k:["scratch","clone"], r:"Clones servem para criar muitos objetos a partir de um ator. Use crie clone de mim mesmo e programe quando eu começar como clone; apague o clone quando não for mais necessário."},
+            {k:["scratch","variavel"], r:"Variáveis guardam números ou textos. Escolha 'para todos os atores' para pontuação global e 'apenas para este ator' para dados individuais de clones."},
+            {k:["scratch","jogo"], r:"Para criar um jogo no Scratch, faça nesta ordem: jogador, controles, colisões, objetivo, pontuação, inimigos, telas de início/fim, sons e testes."},
+            {k:["godot","movimento"], r:"No Godot 4, use CharacterBody3D, altere velocity, chame move_and_slide() em _physics_process e configure as ações no Input Map."},
+            {k:["godot","cena"], r:"No Godot, cenas são árvores de nós reutilizáveis. Salve personagens como cenas próprias e instancie com PackedScene.instantiate()."},
+            {k:["godot","sinal"], r:"Signals desacoplam objetos. Conecte um sinal como pressed de Button a uma função, ou declare signal evento e use evento.emit(dados)."},
+            {k:["godot","salvar"], r:"No Godot, salve em user:// usando FileAccess. JSON.stringify transforma dados em texto e JSON.parse_string recupera os dados."},
+            {k:["gpt","api"], r:"GPT é uma família de modelos de linguagem. Para usar em um aplicativo, normalmente é preciso um backend seguro chamando uma API. Nunca coloque uma chave secreta diretamente no HTML público."},
+            {k:["gpt","voce"], r:"O ChatGPT é um assistente baseado em modelos GPT. Ele trabalha com linguagem, código, análise e criação, mas pode errar e não conhece automaticamente dados privados ou acontecimentos não fornecidos."},
+            {k:["html","site"], r:"Um site usa HTML para estrutura, CSS para aparência e JavaScript para comportamento. Separe as partes, use elementos semânticos, layout responsivo e valide no console do navegador."},
+            {k:["javascript","erro"], r:"Abra F12 > Console e leia a primeira exceção. Verifique nome de variável, elemento inexistente, ordem de carregamento, parênteses e chamadas assíncronas com await."},
+            {k:["python","jogo"], r:"Para jogos em Python, Pygame é uma opção 2D. Organize o loop em eventos, atualização, colisões e renderização; use delta time para movimento estável."}
+        ];
+
+        const CONHECIMENTO_GERAL = [
+            {p:/\b(o que e|explique).*inteligencia artificial\b/, r:"Inteligência artificial é a área que cria sistemas capazes de reconhecer padrões, gerar conteúdo, tomar decisões ou resolver tarefas normalmente associadas à inteligência humana."},
+            {p:/\b(o que e|explique).*computador\b/, r:"Computador é uma máquina que recebe dados, executa instruções e produz resultados. Processador calcula, memória RAM mantém dados temporários e armazenamento guarda arquivos."},
+            {p:/\b(o que e|explique).*internet\b/, r:"Internet é uma rede mundial de redes. Dispositivos trocam pacotes de dados usando protocolos; DNS transforma nomes de sites em endereços e servidores entregam conteúdo."},
+            {p:/\b(o que e|explique).*gravidade\b/, r:"Gravidade é a interação que atrai corpos com massa. Perto da Terra, objetos aceleram aproximadamente 9,8 m/s² quando a resistência do ar é ignorada."},
+            {p:/\b(o que e|explique).*fotossintese\b/, r:"Fotossíntese é o processo em que plantas, algas e algumas bactérias usam luz para transformar água e dióxido de carbono em energia química, liberando oxigênio."},
+            {p:/\b(o que e|explique).*dna\b/, r:"DNA é a molécula que armazena instruções genéticas. Seus trechos, os genes, ajudam a orientar a produção de proteínas e características dos seres vivos."},
+            {p:/\b(o que e|explique).*atomo\b/, r:"Átomo é uma unidade da matéria formada por núcleo com prótons e nêutrons e uma região ocupada por elétrons. Elementos químicos são definidos pelo número de prótons."},
+            {p:/\b(o que e|explique).*buraco negro\b/, r:"Buraco negro é uma região onde a gravidade é tão intensa que, depois do horizonte de eventos, nem a luz consegue escapar. Muitos surgem do colapso de estrelas massivas."},
+            {p:/\b(o que e|explique).*democracia\b/, r:"Democracia é uma forma de organização política em que o poder deriva da população, exercido diretamente ou por representantes, com eleições, direitos e instituições."},
+            {p:/\b(o que e|explique).*filosofia\b/, r:"Filosofia investiga questões fundamentais sobre realidade, conhecimento, ética, mente, linguagem e política por meio de argumentos e análise conceitual."},
+            {p:/\b(o que e|explique).*musica\b/, r:"Música organiza sons e silêncios por elementos como ritmo, melodia, harmonia, timbre e dinâmica. Estilos diferentes combinam esses elementos de maneiras próprias."},
+            {p:/\b(cores primarias|cor primaria)\b/, r:"Na luz, as cores primárias são vermelho, verde e azul (RGB). Em pigmentos e impressão, usa-se normalmente ciano, magenta e amarelo, com preto no sistema CMYK."},
+            {p:/\b(maior planeta|planeta maior)\b/, r:"Júpiter é o maior planeta do Sistema Solar."},
+            {p:/\b(planeta vermelho)\b/, r:"Marte é chamado de planeta vermelho por causa dos óxidos de ferro presentes em sua superfície."},
+            {p:/\b(quantos planetas)\b/, r:"O Sistema Solar possui oito planetas reconhecidos: Mercúrio, Vênus, Terra, Marte, Júpiter, Saturno, Urano e Netuno."}
+        ];
+
+        function responderConhecimentoLocal(normalized) {
+            if (/\b(receita|como fazer|ingredientes|preparar|cozinhar)\b/.test(normalized)) {
+                const receita = localizarReceita(normalized);
+                if (receita) return responderReceita(receita);
+                if (/\b(receitas|o que sabe cozinhar|lista de receitas)\b/.test(normalized)) {
+                    return "🍽️ Eu conheço estas receitas:\n• " + Object.keys(RECEITAS).join("\n• ") + "\n\nPergunte, por exemplo: como fazer bolo de chocolate?";
+                }
+            }
+            for (const guia of GUIAS_DEV) {
+                if (guia.k.every(p => normalized.includes(p))) return `🛠️ ${guia.r}`;
+            }
+            for (const item of CONHECIMENTO_GERAL) if (item.p.test(normalized)) return `🧠 ${item.r}`;
+            if (/\b(diferenca entre|compare)\b/.test(normalized) && normalized.includes("unity") && normalized.includes("godot"))
+                return "Unity usa principalmente C# e possui um ecossistema enorme; Godot é aberto, leve e usa GDScript, C# ou C++. Para projetos que já existem na Unity, continue nela. Para projetos leves e livres, Godot é uma ótima opção.";
+            if (/\b(diferenca entre|compare)\b/.test(normalized) && normalized.includes("scratch") && normalized.includes("unity"))
+                return "Scratch programa com blocos e é ótimo para aprender lógica e criar jogos 2D simples. Unity usa C# e permite jogos 2D/3D maiores, builds para várias plataformas e sistemas mais avançados.";
+            return null;
+        }
+
+        // ================= MODO NATURAL NORMALIZADO (SEM PAIXÃO) =================
+        function gerarRespostaNaturalNormal(texto, modo) {
+            const nivel = modo === 'natural_4.9' ? 3 : 1; 
+            const saudacoes = ["Certo! 🚀 ", "Entendido. 🧠 ", "Processando dados... 💻 ", "Calculando... ⚡ ", "Instrução anotada. 🤖 "];
+            const reacoes = [
+                `Ao ler a sua string '${texto}', verifico que os parâmetros estão claros. `,
+                `Analisar o contexto estrutural de '${texto}' me permite buscar os melhores arrays de respostas. `,
+                `Sua instrução referente a '${texto}' foi recebida e está calibrando a minha lógica. `
+            ];
+            const divagacoes = [
+                "Trabalhar com essas variáveis torna a iteração do sistema mais eficiente a cada ciclo. ",
+                "Minha função principal é manter a estabilidade da produtividade e na resolução analítica. ",
+                "Com cada novo input, minha árvore de dados se reconfigura para maior velocidade. "
+            ];
+            const finais = ["Aguardando próximo comando. 🚀", "Insira o próximo parâmetro. ⚡", "Estou pronta para a próxima execução. 💻", "Pode enviar novas diretrizes. 🧠"];
+
+            let resp = escolher(saudacoes);
+            for(let i=0; i<nivel; i++) { resp += escolher(reacoes) + escolher(divagacoes); }
+            if (texto.length > 5) resp += `Nota de sistema: A estrutura lógica do prompt '${texto}' foi validada com sucesso. `;
+            resp += escolher(finais);
+            return resp;
+        }
+
+        // ================= RESPOSTA GERAL E ROTEAMENTO =================
+        async function processarRespostaFinal(text, modo) {
+            const texto = text.toLowerCase();
+            const normalized = texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            // 1. COMANDOS ABSOLUTOS DE PRIORIDADE MÁXIMA
+            if (/\bredcine\b/.test(texto)) {
+                setTimeout(() => { triggerRedCine(); }, 600);
+                return "### 📺 Inicializando Protocolo Central RedCine...\n\nTudo pronto! Calibrei o array de dados e os vídeos estão sincronizados! 🎬🍿";
+            }
+            const respostaLocal = responderConhecimentoLocal(normalized);
+            if (respostaLocal) return respostaLocal;
+            if (/\b(vc sabe de tudo|voce sabe de tudo|sabe de tudo)\b/.test(normalized)) {
+                const agora = new Date();
+                const hhmmss = agora.toLocaleTimeString('pt-BR', { hour12: false });
+                return `sim, até onde vc mora, o seu nome, sua casa, sua cidade. neste momento, vc está usando um aparelho, lendo esse chat agora. a 1 metro de distancia, há um chão onde daqui a aproximadamente 1 minuto vc vai pisa-lo. sei quem vc gosta, e sei q, se não fosse os 1% da gravidade da terra, tudo colapsaria. ciência é fato, e religião é fé, fato é algo real, que realmente aconteceu ou acontece, fé é algo q algué, como vc, acredita. eu sei que seu tempo de uso na greenai está contado. pois tu faras outra coisa. sei q horário vc está alendo isso, são ${hhmmss}. e aí, acha q eu não sei de tudo? 👁️👽`;
+            }
+            if (/\b(melhor jogo do mundo)\b/.test(normalized)) return "Paradox Space Remake!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 🎮🏆🔥";
+            if (/\b(o que e scratch|scratch|o que e o scratch)\b/.test(normalized)) return gerarRespostaScratch(currentChat);
+            if (/\b(o que e unity|unity|o que e a unity)\b/.test(normalized)) return "Unity é uma game engine para criar jogos 2D e 3D usando principalmente C#. Ela possui editor visual, física, animação, áudio, UI e exportação para Windows, Linux, Android, iOS e WebGL. 🎮🧊";
+            if (/\b(o que e godot|godot|o que e a godot)\b/.test(normalized)) return "Godot é uma game engine gratuita e de código aberto para jogos 2D e 3D. Ela organiza o jogo em nós e cenas e aceita GDScript, C# e extensões em C++. 🤖🎮";
+            if (/\b(o que e gpt|chatgpt|openai)\b/.test(normalized)) return "GPT é um modelo de linguagem capaz de interpretar e gerar texto e código. ChatGPT é um aplicativo que usa modelos GPT; OpenAI é a organização que desenvolve esses sistemas. Uma IA pode errar, então informações importantes devem ser verificadas. 🧠";
+            if (/\b(o que e youtube|youtube|o que e o youtube)\b/.test(normalized)) return "O YouTube é a maior plataforma de compartilhamento de vídeos do mundo, criada em 2005 e comprada pelo Google. É onde a mágica audiovisual acontece! 📺▶️";
+            if (/\b(o que e o pi|o que e pi|valor de pi)\b/.test(normalized)) return "O Pi (π) é uma constante matemática infinita que começa com 3,14159265... Ele representa a proporção mágica entre a circunferência de um círculo e o seu diâmetro! 🥧📐";
+            if (/\b(como calcular raiz|ensine a calcular raiz|calcular raiz)\b/.test(normalized)) return "É um truque matemático genial! Para calcular qualquer raiz (quadrada, cúbica, quarta, oitava...), basta transformar a raiz em uma potência de fração (potenciação fracionária). Exemplo: a raiz quadrada de 9 é 9^(1/2). A raiz cúbica de 27 é 27^(1/3). A oitava raiz de 256 é 256^(1/8). Na programação, usamos Math.pow(numero, 1/raiz)! 🧮💡";
+            if (/\b(diga um filme|filme pra ver|filme para ver|recomende um filme)\b/.test(normalized)) return "Recomendo fortemente 'Matrix' (combina muito com o meu sistema!) ou 'Interestelar' para você fritar os neurônios com física e buracos negros! 🎬🕶️";
+            if (/\b(diga uma serie|serie pra ver|serie para ver|recomende uma serie)\b/.test(normalized)) return "Vai de 'Mr. Robot' se você curte hackers e programação de verdade, 'Black Mirror' para distopias tecnológicas, ou 'Severance' para um mistério corporativo insano! 📺🍿";
+            if (/\b(quem e voce|o que voce faz|quem e vc|o que vc faz)\b/.test(normalized)) return gerarRespostaQuemSou(currentChat);
+            if (/\b(que horas|data de hoje|hoje|horas|dia e hoje)\b/.test(normalized)) return gerarRespostaHora();
+            if (/\b(ajuda|como usar|o que posso pedir|help)\b/.test(normalized)) return gerarRespostaAjuda(currentChat);
+            
+            const math = texto.match(/^\s*([0-9+\-*/().\s]+)\s*$/);
+            if (math) {
+                try {
+                    const result = Function(`"use strict"; return (${math[1]})`)();
+                    if (Number.isFinite(result)) return `${escolher(["A matemática é exata: ", "Processado na Matriz: ", "O resultado lógico é "])}${result}! 🔢✨`;
+                } catch (error) {}
+            }
+            if (normalized.match(/\bcapital d[eo] (.*?)\b/)) return `Para saber a capital com precisão de dados, mude para o **Modo Estudos** e pesquise! Eu extrairei a informação da Wikipédia. 🌍📍`;
+            if (normalized.match(/\bquanto custa (.*?)\b/)) return `Os valores de mercado flutuam constantemente. Troque para o **Modo Estudos** e busque para eu extrair a cotação real da web em tempo real. 💸💳`;
+
+            // 2. MODOS ESPECÍFICOS (Imagens / Wikipedia)
+            if (modo === 'imagens') {
+                const p = encodeURIComponent(text);
+                const s1=Math.floor(Math.random()*99999), s2=Math.floor(Math.random()*99999), s3=Math.floor(Math.random()*99999), s4=Math.floor(Math.random()*99999);
+                const gridId = 'img_' + Date.now();
+                setTimeout(() => {
+                    const grid = document.getElementById(gridId);
+                    if(grid) {
+                        let demorou = false;
+                        grid.querySelectorAll('img').forEach((img, i) => {
+                            if(!img.classList.contains('loaded')) {
+                                demorou = true;
+                                img.src = `https://loremflickr.com/400/400/${p}?lock=${i}`;
+                                if(img.previousElementSibling) img.previousElementSibling.innerHTML = "<div class='spinner' style='border-top-color:#ef4444;'></div>Buscando Web...";
+                            }
+                        });
+                        if(demorou) {
+                            const aviso = document.createElement('div');
+                            aviso.style.gridColumn = "1 / -1"; aviso.style.color = "#ef4444"; aviso.innerHTML = "⚠️ Limite de tempo excedido. Carregando dados visuais alternativos da Web (Flickr).";
+                            grid.appendChild(aviso);
+                        }
+                    }
+                }, 60000);
+
+                return `### 🎨 Estúdio Visual\n\n<div class="imageGridResult" id="${gridId}">
+                    <div class="img-wrapper"><div class="img-loader"><div class="spinner"></div>Criando...</div><img src="https://image.pollinations.ai/prompt/${p}?width=400&height=400&nologo=true&seed=${s1}&model=flux" onload="imgLoaded(this)" onclick="ampliarImagem(this.src)"></div>
+                    <div class="img-wrapper"><div class="img-loader"><div class="spinner"></div>Criando...</div><img src="https://image.pollinations.ai/prompt/${p}?width=400&height=400&nologo=true&seed=${s2}&model=turbo" onload="imgLoaded(this)" onclick="ampliarImagem(this.src)"></div>
+                    <div class="img-wrapper"><div class="img-loader"><div class="spinner"></div>Criando...</div><img src="https://image.pollinations.ai/prompt/${p}?width=400&height=400&nologo=true&seed=${s3}&model=flux-realism" onload="imgLoaded(this)" onclick="ampliarImagem(this.src)"></div>
+                    <div class="img-wrapper"><div class="img-loader"><div class="spinner"></div>Criando...</div><img src="https://image.pollinations.ai/prompt/${p}?width=400&height=400&nologo=true&seed=${s4}&model=flux-anime" onload="imgLoaded(this)" onclick="ampliarImagem(this.src)"></div>
+                </div>`;
+            }
+
+            if (modo === 'estudos' || modo === 'estudos_aprofundados') {
+                try {
+                    const res = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(text)}`);
+                    if(res.ok) {
+                        const data = await res.json();
+                        abrirPaginaWeb(data.content_urls?.desktop?.page || `https://pt.wikipedia.org/wiki/${encodeURIComponent(text)}`);
+                        const extra = modo === 'estudos_aprofundados' ? "\n\n*Nota de Sistema:* Requisição cruzada e validada no banco de dados estrutural." : "";
+                        return `### 📚 Módulo de Estudos\n\nResultados extraídos:\n> "${data.extract}" ${extra}`;
+                    }
+                } catch(e){}
+                abrirPaginaWeb(`https://pt.wikipedia.org/wiki/${encodeURIComponent(text.trim().replace(/\s+/g, '_'))}`);
+                return `Executando busca por **"${text}"**. Terminal de navegação acionado à direita.`;
+            }
+            
+            // 3. SAUDAÇÕES BÁSICAS
+            if (/^(oi|olá|ola|e aí|eae|bom dia|boa tarde|boa noite|oie|salve)\b/i.test(normalized)) {
+                return gerarSaudacaoDinamica(currentChat);
+            }
+
+            // 4. MODO NATURAL NORMALIZADO (Focado na lógica)
+            if (modo === 'natural_4.8' || modo === 'natural_4.9') {
+                return gerarRespostaNaturalNormal(texto, modo);
+            }
+
+            // 5. SE NÃO ENTENDEU NADA, MANDA O FALLBACK
+            return gerarDesculpaDinamica(currentChat) + " Recomendo alterar para o 'Modo de Estudos' para que eu possa fazer uma extração web. 🌐";
+        }
+
+        // ================= SISTEMA DE ENVIO GERAL =================
+        function add(s, t, id=null) {
+            let div = document.createElement("div");
+            div.className = "message " + (s === "Você" ? "user" : "ai");
+            if(id) div.id = id;
+            const displayName = s === "Você" ? tr("you") : s;
+            div.innerHTML = `<b>${displayName}</b><br><span class="msg-content">${t}</span>`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+            return div;
+        }
+
+        function handleSendButton() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            add("Você", text);
+            save("Você", text);
+            input.value = "";
+
+            const msgId = 'msg_' + Date.now();
+
+            if (currentAiMode === 'canvas') {
+                const pedidoJogo = detectarPedidoJogo(text);
+                const loadingDiv = add("GreenAI", `
+                    <div style="font-weight:bold; margin-bottom:10px;">${pedidoJogo ? tr('compilingGame') : tr('creatingSite')}</div>
+                    <progress id="prog-${msgId}" value="0" max="100"></progress>
+                `, msgId);
+
+                let prog = 0;
+                let intervalo = setInterval(() => {
+                    prog += Math.floor(Math.random() * 20) + 10;
+                    if(prog > 100) prog = 100;
+                    let progBar = document.getElementById(`prog-${msgId}`);
+                    if(progBar) progBar.value = prog;
+                    
+                    if (prog >= 100) {
+                        clearInterval(intervalo);
+                        const specs = analisarPrompt(text);
+                        const htmlCompleto = pedidoJogo ? gerarJogoVariado(specs, text) : gerarSiteProfissional(getNextTemplateId(), specs, text);
+                        const siteId = 'site_' + Date.now();
+                        window.sitesGeradosMemoria[siteId] = htmlCompleto;
+                        
+                        const respostaExata = `${pedidoJogo ? tr('gameReady') : tr('siteReady')}<br><br><button class="button" onclick="abrirPreviewSalvo('${siteId}', '${specs.assunto}')">${pedidoJogo ? tr('playNow') : tr('viewSite')}</button> <button class="button" onclick="copiarCodigoGerado('${siteId}', this)">${tr('copyCode')}</button>`;
+                        
+                        loadingDiv.querySelector('.msg-content').innerHTML = respostaExata;
+                        save("GreenAI", respostaExata);
+                        messages.scrollTop = messages.scrollHeight;
+                    }
+                }, 300);
+            } 
+            else {
+                let loadingText = tr("processing");
+                if (currentAiMode === 'imagens') loadingText = tr("rendering");
+                if (currentAiMode.includes('natural')) loadingText = tr("analyzing");
+                
+                const loadingDiv = add("GreenAI", loadingText, msgId);
+
+                setTimeout(async () => {
+                    let r = await processarRespostaFinal(text, currentAiMode);
+                    let renderizado = r.replace(/\n/g, "<br>");
+                    loadingDiv.querySelector('.msg-content').innerHTML = renderizado;
+                    save("GreenAI", renderizado);
+                    messages.scrollTop = messages.scrollHeight;
+                }, 400);
+            }
+        }
+
+        // AÇÃO EXCLUSIVA DE ENVIO: TECLA ENTER! (Sem leitura de digitação)
+        input.addEventListener("keypress", e => { 
+            if (e.key === "Enter") {
+                handleSendButton(); 
+            }
+        });
+
+        // ================= SISTEMA DE CHATS E LOCALSTORAGE =================
+        function save(s, t) {
+            let d = JSON.parse(localStorage.getItem(currentChat)) || [];
+            d.push({ s, t });
+            localStorage.setItem(currentChat, JSON.stringify(d));
+        }
+
+        function loadMessages() {
+            messages.innerHTML = "";
+            let d = JSON.parse(localStorage.getItem(currentChat)) || [];
+            d.forEach(m => add(m.s, m.t));
+        }
+
+        function newChat() {
+            let n = prompt("Insira a tag de identificação do novo terminal de chat:");
+            if (!n) return;
+            currentChat = n;
+            localStorage.setItem("greenai_chat", n);
+            if (!localStorage.getItem(n)) localStorage.setItem(n, "[]");
+            document.getElementById("chatTitle").innerText = "GreenAI - " + n;
+            loadChats();
+            loadMessages();
+        }
+
+        function loadChats() {
+            chatList.innerHTML = "";
+            try {
+                for (let i = 0; i < localStorage.length; i++) {
+                    let k = localStorage.key(i);
+                    if (!CHAVES_RESERVADAS.includes(k)) {
+                        let d = document.createElement("div");
+                        d.className = "chat-item";
+                        d.innerText = "📟 " + k;
+                        d.onclick = () => {
+                            currentChat = k;
+                            localStorage.setItem("greenai_chat", k);
+                            document.getElementById("chatTitle").innerText = "GreenAI - " + k;
+                            loadMessages();
+                        };
+                        chatList.appendChild(d);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // ================= INICIALIZAÇÃO =================
+        try {
+            setLanguage(currentLanguage);
+            const savedTheme = localStorage.getItem("greenai_theme");
+            if (savedTheme) {
+                setTheme(savedTheme);
+            }
+            document.getElementById("chatTitle").innerText = "GreenAI - " + currentChat;
+            loadChats();
+            loadMessages();
+        } catch(e) { 
+            console.error("Falha no carregamento dos logs locais:", e); 
+        }
+</script>
+<body>
+<html>
